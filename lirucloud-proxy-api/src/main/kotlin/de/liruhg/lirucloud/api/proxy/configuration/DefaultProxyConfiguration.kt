@@ -14,6 +14,7 @@ class DefaultProxyConfiguration(
 ) : Configuration {
 
     private val logger: Logger = LoggerFactory.getLogger(DefaultProxyConfiguration::class.java)
+
     override fun execute() {
         val proxyConfigurationFile = File(Directories.PROXY_PLUGINS_API, "config.json")
 

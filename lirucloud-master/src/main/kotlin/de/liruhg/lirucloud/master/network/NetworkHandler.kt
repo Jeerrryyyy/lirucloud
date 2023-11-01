@@ -14,6 +14,7 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
     private val logger: Logger = LoggerFactory.getLogger(NetworkHandler::class.java)
 
     private val clientRegistry: ClientRegistry by LiruCloudMaster.KODEIN.instance()
+    private val networkConnectionRegistry: NetworkConnectionRegistry by LiruCloudMaster.KODEIN.instance()
 
     override fun channelRead0(channelHandlerContext: ChannelHandlerContext, packet: Packet) {
         packet.handle(channelHandlerContext)
@@ -25,7 +26,7 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
                 channelHandlerContext.channel().id()
             }] connected. Awaiting handshake."
         )
-        this.clientRegistry.registerDanglingConnection(channelHandlerContext.channel())
+        this.networkConnectionRegistry.registerDanglingConnection(channelHandlerContext.channel())
     }
 
     override fun channelInactive(channelHandlerContext: ChannelHandlerContext) {

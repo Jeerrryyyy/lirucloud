@@ -28,6 +28,7 @@ import de.liruhg.lirucloud.master.configuration.server.ServerDownloadConfigurati
 import de.liruhg.lirucloud.master.configuration.server.ServerGroupLoader
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
+import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
 import de.liruhg.lirucloud.master.network.NetworkServer
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProxyProcess
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestServerProcess
@@ -124,6 +125,7 @@ class LiruCloudMaster {
             }
 
             bindSingleton { ClientRegistry() }
+            bindSingleton { NetworkConnectionRegistry() }
 
             bindSingleton {
                 val commandManager = CommandManager(instance())

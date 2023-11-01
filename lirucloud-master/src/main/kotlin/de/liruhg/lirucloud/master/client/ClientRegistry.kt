@@ -6,7 +6,6 @@ import io.netty.channel.Channel
 class ClientRegistry {
 
     private val clients: MutableMap<String, ClientInfoModel> = mutableMapOf()
-    private val danglingConnections: MutableMap<Channel, Long> = mutableMapOf()
 
     fun registerClient(clientInfoModel: ClientInfoModel): Boolean {
         if (this.clients.containsKey(clientInfoModel.uuid)) return false
@@ -15,25 +14,11 @@ class ClientRegistry {
         return this.clients.containsKey(clientInfoModel.uuid)
     }
 
-    fun registerDanglingConnection(channel: Channel): Boolean {
-        if (this.danglingConnections.containsKey(channel)) return false
-        this.danglingConnections[channel] = System.currentTimeMillis() + 10000
-
-        return this.danglingConnections.containsKey(channel)
-    }
-
     fun unregisterClient(clientInfoModel: ClientInfoModel): Boolean {
         if (!this.clients.containsKey(clientInfoModel.uuid)) return false
         this.clients.remove(clientInfoModel.uuid)
 
         return !this.clients.containsKey(clientInfoModel.uuid)
-    }
-
-    fun unregisterDanglingConnection(channel: Channel): Boolean {
-        if (!this.danglingConnections.containsKey(channel)) return false
-        this.danglingConnections.remove(channel)
-
-        return !this.danglingConnections.containsKey(channel)
     }
 
     fun updateClient(clientInfoModel: ClientInfoModel): Boolean {
@@ -93,13 +78,5 @@ class ClientRegistry {
         }
 
         return bestClient
-    }
-
-    fun getDanglingConnection(channel: Channel): Long? {
-        return this.danglingConnections[channel]
-    }
-
-    fun getDanglingConnections(): Map<Channel, Long> {
-        return this.danglingConnections
     }
 }

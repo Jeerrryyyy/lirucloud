@@ -8,6 +8,7 @@ import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.client.protocol.out.PacketOutClientHandshakeResult
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
+import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
 import de.liruhg.lirucloud.master.runtime.RuntimeVars
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -22,6 +23,7 @@ class PacketInClientRequestHandshake : Packet {
     private val runtimeVars: RuntimeVars by LiruCloudMaster.KODEIN.instance()
     private val networkUtil: NetworkUtil by LiruCloudMaster.KODEIN.instance()
     private val clientRegistry: ClientRegistry by LiruCloudMaster.KODEIN.instance()
+    private val networkConnectionRegistry: NetworkConnectionRegistry by LiruCloudMaster.KODEIN.instance()
     private val proxyGroupHandler: ProxyGroupHandler by LiruCloudMaster.KODEIN.instance()
     private val serverGroupHandler: ServerGroupHandler by LiruCloudMaster.KODEIN.instance()
 
@@ -85,7 +87,7 @@ class PacketInClientRequestHandshake : Packet {
             ), channelHandlerContext.channel()
         )
 
-        this.clientRegistry.unregisterDanglingConnection(channelHandlerContext.channel())
+        this.networkConnectionRegistry.unregisterDanglingConnection(channelHandlerContext.channel())
 
         this.logger.info(
             "Successfully registered Client with Name: [$clientName] - Remote: [${
