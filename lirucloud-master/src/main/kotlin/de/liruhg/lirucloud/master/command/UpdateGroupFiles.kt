@@ -65,6 +65,8 @@ class UpdateGroupFiles(
     }
 
     private fun updateProxyGroup(proxyGroupModel: ProxyGroupModel) {
+        this.logger.info("Updating group with Name: [${proxyGroupModel.name}]")
+
         val templatePath = Path.of("${Directories.MASTER_TEMPLATE_PROXY}/${proxyGroupModel.name}")
         val defaultTemplatePath = Path.of("${Directories.MASTER_TEMPLATE_PROXY}/${proxyGroupModel.name}/default")
 

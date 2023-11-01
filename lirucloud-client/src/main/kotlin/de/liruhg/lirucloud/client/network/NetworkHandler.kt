@@ -49,7 +49,7 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
     }
 
     override fun channelInactive(channelHandlerContext: ChannelHandlerContext) {
-        this.logger.error("Master unfortunately disconnected, trying to shut down gracefully...")
+        this.logger.error("Channel disconnected, trying to shut down gracefully...")
         exitProcess(0)
     }
 
@@ -60,7 +60,5 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
                 channelHandlerContext.channel().id()
             }] - Reason: [${cause.message}]"
         )
-
-        cause.printStackTrace()
     }
 }

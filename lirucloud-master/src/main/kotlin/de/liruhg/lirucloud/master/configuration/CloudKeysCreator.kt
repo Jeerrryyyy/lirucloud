@@ -27,18 +27,6 @@ class CloudKeysCreator(
 
         val clientKey = FileUtils.readStringFromFile(clientKeyFile)
         this.runtimeVars.clientKey = clientKey
-
-        val webKeyFile = File(Directories.MASTER_KEYS, "web.key")
-
-        if (!webKeyFile.exists()) {
-            this.logger.info("Web key file does not exist. Creating default web key file")
-
-            val webKey = this.generateKey()
-            FileUtils.writeStringToFile(webKeyFile, webKey)
-        }
-
-        val webKey = FileUtils.readStringFromFile(webKeyFile)
-        this.runtimeVars.webKey = webKey
     }
 
     private fun generateKey(): String {

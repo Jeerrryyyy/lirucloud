@@ -7,7 +7,6 @@ class RuntimeVars {
 
     lateinit var cloudConfiguration: CloudConfigurationModel
     lateinit var clientKey: String
-    lateinit var webKey: String
 
     var debug by Delegates.notNull<Boolean>()
 }

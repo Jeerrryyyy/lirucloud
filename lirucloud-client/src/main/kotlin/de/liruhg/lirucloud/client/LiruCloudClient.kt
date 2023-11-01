@@ -14,8 +14,8 @@ import de.liruhg.lirucloud.client.process.ProcessRegistry
 import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestProxyProcess
 import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestServerProcess
 import de.liruhg.lirucloud.client.process.proxy.InternalProxyProcess
-import de.liruhg.lirucloud.client.process.proxy.ProxyConfigGenerator
 import de.liruhg.lirucloud.client.process.proxy.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
 import de.liruhg.lirucloud.client.process.server.InternalServerProcess
 import de.liruhg.lirucloud.client.process.server.ServerProcessRequestHandler
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
@@ -73,6 +73,8 @@ class LiruCloudClient {
     }
 
     fun shutdownGracefully() {
+        this.logger.info("Shutting down LiruCloud gracefully... Please be patient.")
+
         KODEIN.direct.instance<ProcessRegistry<InternalServerProcess>>().killAllProcesses()
         KODEIN.direct.instance<ProcessRegistry<InternalProxyProcess>>().killAllProcesses()
         KODEIN.direct.instance<CommandManager>().stop()
@@ -115,10 +117,10 @@ class LiruCloudClient {
                 commandManager
             }
 
-            bindSingleton { ProxyConfigGenerator() }
+            bindSingleton { ProxyConfigurationGenerator() }
 
             bindSingleton { ProcessRegistry<InternalProxyProcess>() }
-            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance()) }
+            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
 
             bindSingleton { ProcessRegistry<InternalServerProcess>() }
             bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance()) }

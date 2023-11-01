@@ -1,13 +1,13 @@
-package de.liruhg.lirucloud.client.process.proxy
+package de.liruhg.lirucloud.client.process.proxy.config
 
 import org.yaml.snakeyaml.Yaml
 import java.io.File
 
-class ProxyConfigGenerator {
+class ProxyConfigurationGenerator {
 
     private val yaml: Yaml = Yaml()
 
-    fun writeConfig(
+    fun writeConfiguration(
         serverPath: File,
         port: Int,
         maxPlayers: Int,

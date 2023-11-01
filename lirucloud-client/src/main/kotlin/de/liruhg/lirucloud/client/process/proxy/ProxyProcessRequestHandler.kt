@@ -2,22 +2,27 @@ package de.liruhg.lirucloud.client.process.proxy
 
 import de.liruhg.lirucloud.client.process.ProcessRegistry
 import de.liruhg.lirucloud.client.process.ProcessRequestHandler
+import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
+import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.library.database.handler.SyncFileHandler
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.process.ProcessStreamConsumer
 import de.liruhg.lirucloud.library.process.model.ProxyProcess
+import de.liruhg.lirucloud.library.proxy.ProxyPluginConfigurationModel
 import de.liruhg.lirucloud.library.thread.ThreadPool
 import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.library.util.HashUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.Path
 
 class ProxyProcessRequestHandler(
     private val processRegistry: ProcessRegistry<InternalProxyProcess>,
     private val fileHandler: SyncFileHandler,
-    private val proxyConfigGenerator: ProxyConfigGenerator,
-    private val threadPool: ThreadPool
+    private val proxyConfigurationGenerator: ProxyConfigurationGenerator,
+    private val threadPool: ThreadPool,
+    private val runtimeVars: RuntimeVars
 ) : ProcessRequestHandler<ProxyProcess> {
 
     private val logger: Logger = LoggerFactory.getLogger(ProxyProcessRequestHandler::class.java)
@@ -48,12 +53,28 @@ class ProxyProcessRequestHandler(
                 File(serverDirectory, "proxy.jar")
             )
 
-            this.proxyConfigGenerator.writeConfig(
+            this.proxyConfigurationGenerator.writeConfiguration(
                 serverDirectory,
                 request.port,
                 request.maxPlayers,
                 60,
                 "§aLiruCloud §7- §ecreated by Jevzo"
+            )
+
+            FileUtils.createDirectory(Path.of(serverDirectory.path, Directories.PROXY_PLUGINS_API))
+
+            FileUtils.copyFile(
+                File(Directories.CLIENT_KEYS, "client.key"),
+                File(serverDirectory, "${Directories.PROXY_PLUGINS_API}/client.key")
+            )
+
+            FileUtils.writeClassToJsonFile(
+                File(serverDirectory, "${Directories.PROXY_PLUGINS_API}/config.json"),
+                ProxyPluginConfigurationModel(
+                    runtimeVars.cloudConfiguration.masterAddress,
+                    runtimeVars.cloudConfiguration.masterPort,
+                    runtimeVars.cloudConfiguration.database
+                )
             )
 
             val processBuilder = ProcessBuilder()

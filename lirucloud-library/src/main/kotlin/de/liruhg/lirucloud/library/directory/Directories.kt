@@ -34,5 +34,8 @@ class Directories {
         const val CLIENT_RUNNING_PROCESSES = "$CLIENT_ROOT/running-processes"
         const val CLIENT_RUNNING_PROCESSES_PROXY = "$CLIENT_RUNNING_PROCESSES/proxy"
         const val CLIENT_RUNNING_PROCESSES_SERVER = "$CLIENT_RUNNING_PROCESSES/server"
+
+        const val PROXY_PLUGINS = "plugins/"
+        const val PROXY_PLUGINS_API = "plugins/LiruCloudProxyApi/"
     }
 }

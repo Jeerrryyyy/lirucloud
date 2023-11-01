@@ -37,7 +37,6 @@ class ProxyDownloadConfiguration(
                 HashUtils.hashStringMD5("proxySoftware")
             )
         } catch (e: Exception) {
-            e.printStackTrace()
             this.logger.error("Failed to download Proxy Jar from URL: [$proxyJarUrl] - Reason: [${e.message}]")
             exitProcess(0)
         }
