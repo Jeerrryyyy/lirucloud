@@ -1,13 +1,10 @@
 package de.liruhg.lirucloud.master.configuration.proxy
 
 import de.liruhg.lirucloud.library.configuration.Configuration
-import de.liruhg.lirucloud.library.directory.Directories
-import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.group.proxy.model.ProxyGroupModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
 
 class ProxyGroupLoader(
     private val proxyGroupHandler: ProxyGroupHandler
@@ -16,9 +13,9 @@ class ProxyGroupLoader(
     private val logger: Logger = LoggerFactory.getLogger(ProxyGroupLoader::class.java)
 
     override fun execute() {
-        val proxyGroupFiles = File(Directories.MASTER_GROUPS_PROXY).listFiles()
+        val shouldCreateGroup = this.proxyGroupHandler.shouldCreateGroup()
 
-        if (proxyGroupFiles == null || proxyGroupFiles.isEmpty()) {
+        if (shouldCreateGroup) {
             this.logger.warn("No proxy groups found. Continuing with creating default proxy group..")
 
             val proxyGroupModel = ProxyGroupModel(
@@ -30,20 +27,19 @@ class ProxyGroupLoader(
                 maxPlayers = 1000,
                 joinPower = 0,
                 maintenance = false,
+                maintenanceProtocolMessage = "§cProtocol message",
+                maintenanceMotd = Pair("§cFirstline", "§cSecondline"),
+                motd = Pair("§cFirstline", "§cSecondline")
             )
 
             this.proxyGroupHandler.createGroup(proxyGroupModel)
             return
         }
 
-        for (proxyGroupFile in proxyGroupFiles) {
-            if (!proxyGroupFile.name.endsWith(".json")) {
-                this.logger.warn("Found invalid proxy group file Name: [${proxyGroupFile.name}]")
-                continue
-            }
+        this.proxyGroupHandler.fetchGroups().forEach {
+            this.proxyGroupHandler.registerGroup(it)
 
-            val proxyGroupModel = FileUtils.readClassFromJson(proxyGroupFile, ProxyGroupModel::class.java)
-            this.proxyGroupHandler.registerGroup(proxyGroupModel)
+            this.logger.info("Registered proxy group with Name: [${it.name}]")
         }
     }
 }

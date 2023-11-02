@@ -17,8 +17,6 @@ abstract class InternalCloudProcess(
     maxMemory: Int,
     port: Int,
     maxPlayers: Int,
-    joinPower: Int,
-    maintenance: Boolean,
     val serverDirectoryPath: Path,
     val process: Process,
     val processStreamConsumer: ProcessStreamConsumer
@@ -33,6 +31,4 @@ abstract class InternalCloudProcess(
     maxMemory,
     port,
     maxPlayers,
-    joinPower,
-    maintenance
 )

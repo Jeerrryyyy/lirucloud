@@ -11,4 +11,19 @@ open class ProxyGroupModel(
     maxPlayers: Int,
     joinPower: Int,
     maintenance: Boolean,
-): AbstractGroup(name, maxServersOnline, minServersOnline, maxMemory, minMemory, maxPlayers, joinPower, maintenance)
+    maintenanceProtocolMessage: String,
+    maintenanceMotd: Pair<String, String>,
+    motd: Pair<String, String>
+) : AbstractGroup(
+    name,
+    maxServersOnline,
+    minServersOnline,
+    maxMemory,
+    minMemory,
+    maxPlayers,
+    joinPower,
+    maintenance,
+    maintenanceProtocolMessage,
+    maintenanceMotd,
+    motd
+)

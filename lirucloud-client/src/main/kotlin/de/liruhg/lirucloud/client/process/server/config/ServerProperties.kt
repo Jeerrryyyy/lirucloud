@@ -1,4 +1,4 @@
-package de.liruhg.lirucloud.client.process.server
+package de.liruhg.lirucloud.client.process.server.config
 
 class ServerProperties {
 

@@ -67,8 +67,6 @@ class ServerProcessRequestHandler(
                         maxMemory = group.maxMemory,
                         port = -1,
                         maxPlayers = group.maxPlayers,
-                        joinPower = group.joinPower,
-                        maintenance = group.maintenance,
                         mode = group.mode,
                     )
                 )
@@ -98,8 +96,6 @@ class ServerProcessRequestHandler(
                         maxMemory = group.maxMemory,
                         port = -1,
                         maxPlayers = group.maxPlayers,
-                        joinPower = group.joinPower,
-                        maintenance = group.maintenance,
                         mode = group.mode,
                     )
                 )
@@ -139,7 +135,10 @@ class ServerProcessRequestHandler(
 
         this.networkUtil.sendPacket(PacketOutRequestServerProcess(process), channel)
 
-        // this.serverProcessRegistry.registerProcess(process) TODO: when process is started (process sends packet)
+        clientInfoModel.runningProcesses.add(process.uuid!!)
+
+        this.clientRegistry.updateClient(clientInfoModel)
+        this.serverProcessRegistry.registerDanglingProcess(process)
         this.logger.info("Requested process with name: [${process.name}] on client with Name: [${clientName}]")
     }
 }

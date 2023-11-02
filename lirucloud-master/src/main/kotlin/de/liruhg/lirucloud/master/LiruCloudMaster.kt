@@ -30,9 +30,12 @@ import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
 import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
 import de.liruhg.lirucloud.master.network.NetworkServer
-import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProxyProcess
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestServerProcess
 import de.liruhg.lirucloud.master.process.proxy.handler.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.master.process.proxy.protocol.`in`.PacketInProxyProcessRequestHandshake
+import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutProxyHandshakeResult
+import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutProxyUpdateStatus
+import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutRequestProxyProcess
 import de.liruhg.lirucloud.master.process.proxy.registry.ProxyProcessRegistry
 import de.liruhg.lirucloud.master.process.server.handler.ServerProcessRequestHandler
 import de.liruhg.lirucloud.master.process.server.registry.ServerProcessRegistry
@@ -107,8 +110,8 @@ class LiruCloudMaster {
 
             bindSingleton { SyncFileHandler(instance()) }
 
-            bindSingleton { ServerGroupHandler(instance()) }
-            bindSingleton { ProxyGroupHandler(instance()) }
+            bindSingleton { ServerGroupHandler(instance(), instance()) }
+            bindSingleton { ProxyGroupHandler(instance(), instance()) }
 
             bindSingleton {
                 val configurationExecutor = ConfigurationExecutor()
@@ -142,7 +145,7 @@ class LiruCloudMaster {
                 val packetRegistry = PacketRegistry()
 
                 packetRegistry.registerIncomingPacket(
-                    PacketId.PACKET_REQUEST_HANDSHAKE,
+                    PacketId.PACKET_CLIENT_REQUEST_HANDSHAKE,
                     PacketInClientRequestHandshake::class.java
                 )
                 packetRegistry.registerIncomingPacket(
@@ -153,9 +156,13 @@ class LiruCloudMaster {
                     PacketId.PACKET_UPDATE_LOAD_STATUS,
                     PacketInClientUpdateLoadStatus::class.java
                 )
+                packetRegistry.registerIncomingPacket(
+                    PacketId.PACKET_PROXY_REQUEST_HANDSHAKE,
+                    PacketInProxyProcessRequestHandshake::class.java
+                )
 
                 packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_HANDSHAKE_RESULT,
+                    PacketId.PACKET_CLIENT_HANDSHAKE_RESULT,
                     PacketOutClientHandshakeResult::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
@@ -166,6 +173,14 @@ class LiruCloudMaster {
                     PacketId.PACKET_REQUEST_SERVER_PROCESS,
                     PacketOutRequestServerProcess::class.java
                 )
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_PROXY_HANDSHAKE_RESULT,
+                    PacketOutProxyHandshakeResult::class.java
+                )
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_PROXY_UPDATE_STATUS,
+                    PacketOutProxyUpdateStatus::class.java
+                )
 
                 packetRegistry
             }
@@ -175,7 +190,7 @@ class LiruCloudMaster {
             bindSingleton {
                 val router = Router()
 
-                router.registerRoute("/status", StatusRoute(instance(), instance()))
+                router.registerRoute("/status", StatusRoute(instance(), instance(), instance(), instance()))
                 router.registerRoute("/user/create", CreateUserRoute(instance(), instance()))
 
                 router

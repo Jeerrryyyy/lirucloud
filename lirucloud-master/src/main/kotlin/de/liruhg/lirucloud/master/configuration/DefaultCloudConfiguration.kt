@@ -32,7 +32,9 @@ class DefaultCloudConfiguration(
                     bucketName = "templates",
                     collections = mutableMapOf(
                         "filesCollection" to "filesCollection",
-                        "webUserCollection" to "webUserCollection"
+                        "webUserCollection" to "webUserCollection",
+                        "proxyGroupsCollection" to "proxyGroupsCollection",
+                        "serverGroupsCollection" to "serverGroupsCollection"
                     )
                 ),
                 validClients = setOf(

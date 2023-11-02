@@ -1,7 +1,7 @@
 package de.liruhg.lirucloud.client.process.protocol.`in`
 
 import de.liruhg.lirucloud.client.LiruCloudClient
-import de.liruhg.lirucloud.client.process.proxy.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.client.process.proxy.handler.ProxyProcessRequestHandler
 import de.liruhg.lirucloud.library.network.protocol.Packet
 import de.liruhg.lirucloud.library.process.model.ProxyProcess
 import io.netty.channel.ChannelHandlerContext

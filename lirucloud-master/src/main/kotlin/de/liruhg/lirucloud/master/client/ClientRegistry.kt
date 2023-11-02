@@ -1,6 +1,7 @@
 package de.liruhg.lirucloud.master.client
 
 import de.liruhg.lirucloud.library.network.client.model.ClientInfoModel
+import de.liruhg.lirucloud.library.process.AbstractProcess
 import io.netty.channel.Channel
 
 class ClientRegistry {
@@ -30,6 +31,12 @@ class ClientRegistry {
 
     fun getClient(uuid: String): ClientInfoModel? {
         return this.clients[uuid]
+    }
+
+    fun getClient(process: AbstractProcess): ClientInfoModel? {
+        return this.clients.values.firstOrNull { client ->
+            client.runningProcesses.any { it == process.uuid }
+        }
     }
 
     fun getClientsByGroup(group: String): Set<ClientInfoModel> {

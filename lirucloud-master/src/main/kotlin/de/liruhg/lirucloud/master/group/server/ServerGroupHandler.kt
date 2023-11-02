@@ -1,22 +1,33 @@
 package de.liruhg.lirucloud.master.group.server
 
+import com.mongodb.client.model.Filters
+import de.liruhg.lirucloud.library.database.DatabaseConnectionFactory
+import de.liruhg.lirucloud.library.database.extension.deleteEntity
+import de.liruhg.lirucloud.library.database.extension.getAllEntities
+import de.liruhg.lirucloud.library.database.extension.getEntity
+import de.liruhg.lirucloud.library.database.extension.insertEntity
 import de.liruhg.lirucloud.library.database.handler.FileHandler
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.library.util.HashUtils
 import de.liruhg.lirucloud.master.group.GroupHandler
 import de.liruhg.lirucloud.master.group.server.model.ServerGroupModel
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 
 class ServerGroupHandler(
-    private val fileHandler: FileHandler
+    private val fileHandler: FileHandler,
+    private val databaseConnectionFactory: DatabaseConnectionFactory
 ) : GroupHandler<ServerGroupModel>() {
 
-    override fun createGroup(group: ServerGroupModel) {
-        FileUtils.writeClassToJsonFile(File(Directories.MASTER_GROUPS_SERVER, "${group.name}.json"), group)
+    private val logger: Logger = LoggerFactory.getLogger(ServerGroupHandler::class.java)
 
-        this.groups[group.name] = group
+    override fun createGroup(group: ServerGroupModel) {
+        this.databaseConnectionFactory.serverGroupsCollection.insertEntity(group)
+
+        this.registerGroup(group)
 
         val templatePath = Path.of("${Directories.MASTER_TEMPLATE_SERVER}/${group.name}")
         val defaultTemplatePath = Path.of("${Directories.MASTER_TEMPLATE_SERVER}/${group.name}/default")
@@ -55,12 +66,31 @@ class ServerGroupHandler(
     override fun deleteGroup(group: ServerGroupModel) {
         val hashedName = HashUtils.hashStringMD5(group.name)
 
-        this.groups.remove(group.name)
         this.fileHandler.deleteFile(hashedName)
 
         FileUtils.deleteFullDirectory(Path.of("${Directories.MASTER_TEMPLATE_SERVER}/${group.name}"))
-        FileUtils.deleteIfExists(Path.of("${Directories.MASTER_GROUPS_SERVER}/${group.name}.json"))
+        FileUtils.deleteIfExists(Path.of("${Directories.MASTER_TEMPLATE_SERVER_TEMP}/${group.name}.zip"))
+
+        this.databaseConnectionFactory.serverGroupsCollection.deleteEntity(Filters.eq("name", group.name))
+        this.unregisterGroup(group)
 
         this.logger.info("Successfully deleted group with Name: [${group.name}]")
+    }
+
+    override fun groupExists(name: String): Boolean {
+        return this.databaseConnectionFactory.serverGroupsCollection.getEntity<ServerGroupModel>(
+            Filters.eq(
+                "name",
+                name
+            )
+        ) != null
+    }
+
+    override fun shouldCreateGroup(): Boolean {
+        return this.databaseConnectionFactory.serverGroupsCollection.countDocuments() == 0L
+    }
+
+    override fun fetchGroups(): Set<ServerGroupModel> {
+        return this.databaseConnectionFactory.serverGroupsCollection.getAllEntities<ServerGroupModel>().toSet()
     }
 }

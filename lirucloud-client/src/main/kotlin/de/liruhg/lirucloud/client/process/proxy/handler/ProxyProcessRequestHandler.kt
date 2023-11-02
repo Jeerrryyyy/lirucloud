@@ -1,13 +1,15 @@
-package de.liruhg.lirucloud.client.process.proxy
+package de.liruhg.lirucloud.client.process.proxy.handler
 
 import de.liruhg.lirucloud.client.process.ProcessRegistry
 import de.liruhg.lirucloud.client.process.ProcessRequestHandler
 import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
+import de.liruhg.lirucloud.client.process.proxy.model.InternalProxyProcess
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.library.database.handler.SyncFileHandler
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.process.ProcessStreamConsumer
 import de.liruhg.lirucloud.library.process.model.ProxyProcess
+import de.liruhg.lirucloud.library.proxy.ProxyInformationModel
 import de.liruhg.lirucloud.library.proxy.ProxyPluginConfigurationModel
 import de.liruhg.lirucloud.library.thread.ThreadPool
 import de.liruhg.lirucloud.library.util.FileUtils
@@ -73,7 +75,11 @@ class ProxyProcessRequestHandler(
                 ProxyPluginConfigurationModel(
                     runtimeVars.cloudConfiguration.masterAddress,
                     runtimeVars.cloudConfiguration.masterPort,
-                    runtimeVars.cloudConfiguration.database
+                    runtimeVars.cloudConfiguration.database,
+                    ProxyInformationModel(
+                        request.uuid.orEmpty(),
+                        request.name.orEmpty()
+                    )
                 )
             )
 
@@ -101,8 +107,6 @@ class ProxyProcessRequestHandler(
                 request.maxMemory,
                 request.port,
                 request.maxPlayers,
-                request.joinPower,
-                request.maintenance,
                 serverDirectory.toPath(),
                 process,
                 processStreamConsumer

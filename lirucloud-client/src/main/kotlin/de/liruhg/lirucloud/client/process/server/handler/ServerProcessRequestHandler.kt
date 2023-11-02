@@ -1,7 +1,9 @@
-package de.liruhg.lirucloud.client.process.server
+package de.liruhg.lirucloud.client.process.server.handler
 
 import de.liruhg.lirucloud.client.process.ProcessRegistry
 import de.liruhg.lirucloud.client.process.ProcessRequestHandler
+import de.liruhg.lirucloud.client.process.server.config.ServerProperties
+import de.liruhg.lirucloud.client.process.server.model.InternalServerProcess
 import de.liruhg.lirucloud.library.database.handler.SyncFileHandler
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.process.ProcessStreamConsumer
@@ -77,8 +79,6 @@ class ServerProcessRequestHandler(
                 request.maxMemory,
                 request.port,
                 request.maxPlayers,
-                request.joinPower,
-                request.maintenance,
                 serverDirectory.toPath(),
                 process,
                 processStreamConsumer,

@@ -11,13 +11,16 @@ import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestHan
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestServers
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientUpdateLoadStatus
 import de.liruhg.lirucloud.client.process.ProcessRegistry
+import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInProxyUpdateStatus
 import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestProxyProcess
 import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestServerProcess
-import de.liruhg.lirucloud.client.process.proxy.InternalProxyProcess
-import de.liruhg.lirucloud.client.process.proxy.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.client.process.proxy.model.InternalProxyProcess
+import de.liruhg.lirucloud.client.process.proxy.registry.ProxyProcessRegistry
+import de.liruhg.lirucloud.client.process.proxy.handler.ProxyProcessRequestHandler
 import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
-import de.liruhg.lirucloud.client.process.server.InternalServerProcess
-import de.liruhg.lirucloud.client.process.server.ServerProcessRequestHandler
+import de.liruhg.lirucloud.client.process.server.model.InternalServerProcess
+import de.liruhg.lirucloud.client.process.server.registry.ServerProcessRegistry
+import de.liruhg.lirucloud.client.process.server.handler.ServerProcessRequestHandler
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.client.task.UpdateLoadStatusTask
 import de.liruhg.lirucloud.library.command.CommandManager
@@ -75,8 +78,8 @@ class LiruCloudClient {
     fun shutdownGracefully() {
         this.logger.info("Shutting down LiruCloud gracefully... Please be patient.")
 
-        KODEIN.direct.instance<ProcessRegistry<InternalServerProcess>>().killAllProcesses()
-        KODEIN.direct.instance<ProcessRegistry<InternalProxyProcess>>().killAllProcesses()
+        KODEIN.direct.instance<ProcessRegistry<InternalServerProcess>>().shutdownProcesses()
+        KODEIN.direct.instance<ProcessRegistry<InternalProxyProcess>>().shutdownProcesses()
         KODEIN.direct.instance<CommandManager>().stop()
         KODEIN.direct.instance<NetworkClient>().shutdownGracefully()
         KODEIN.direct.instance<ThreadPool>().shutdown()
@@ -119,17 +122,17 @@ class LiruCloudClient {
 
             bindSingleton { ProxyConfigurationGenerator() }
 
-            bindSingleton { ProcessRegistry<InternalProxyProcess>() }
+            bindSingleton { ProxyProcessRegistry() }
             bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
 
-            bindSingleton { ProcessRegistry<InternalServerProcess>() }
+            bindSingleton { ServerProcessRegistry() }
             bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance()) }
 
             bindSingleton {
                 val packetRegistry = PacketRegistry()
 
                 packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_REQUEST_HANDSHAKE,
+                    PacketId.PACKET_CLIENT_REQUEST_HANDSHAKE,
                     PacketOutClientRequestHandshake::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
@@ -142,7 +145,7 @@ class LiruCloudClient {
                 )
 
                 packetRegistry.registerIncomingPacket(
-                    PacketId.PACKET_HANDSHAKE_RESULT,
+                    PacketId.PACKET_CLIENT_HANDSHAKE_RESULT,
                     PacketInClientHandshakeResult::class.java
                 )
                 packetRegistry.registerIncomingPacket(
@@ -152,6 +155,10 @@ class LiruCloudClient {
                 packetRegistry.registerIncomingPacket(
                     PacketId.PACKET_REQUEST_SERVER_PROCESS,
                     PacketInRequestServerProcess::class.java
+                )
+                packetRegistry.registerIncomingPacket(
+                    PacketId.PACKET_PROXY_UPDATE_STATUS,
+                    PacketInProxyUpdateStatus::class.java
                 )
 
                 packetRegistry

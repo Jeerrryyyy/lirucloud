@@ -1,4 +1,4 @@
-package de.liruhg.lirucloud.master.process.protocol.out
+package de.liruhg.lirucloud.master.process.proxy.protocol.out
 
 import de.liruhg.lirucloud.library.network.protocol.Packet
 import de.liruhg.lirucloud.library.process.model.ProxyProcess

@@ -9,7 +9,7 @@ import de.liruhg.lirucloud.library.util.PortUtils
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.process.ProcessRequestHandler
-import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProxyProcess
+import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutRequestProxyProcess
 import de.liruhg.lirucloud.master.process.proxy.registry.ProxyProcessRegistry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -66,9 +66,7 @@ class ProxyProcessRequestHandler(
                         minMemory = group.minMemory,
                         maxMemory = group.maxMemory,
                         port = -1,
-                        maxPlayers = group.maxPlayers,
-                        joinPower = group.joinPower,
-                        maintenance = group.maintenance,
+                        maxPlayers = group.maxPlayers
                     )
                 )
             } else {
@@ -96,9 +94,7 @@ class ProxyProcessRequestHandler(
                         minMemory = group.minMemory,
                         maxMemory = group.maxMemory,
                         port = -1,
-                        maxPlayers = group.maxPlayers,
-                        joinPower = group.joinPower,
-                        maintenance = group.maintenance,
+                        maxPlayers = group.maxPlayers
                     )
                 )
             }
@@ -137,7 +133,10 @@ class ProxyProcessRequestHandler(
 
         this.networkUtil.sendPacket(PacketOutRequestProxyProcess(process), channel)
 
-        //this.proxyProcessRegistry.registerProcess(process) TODO: when process is started (process sends packet)
+        clientInfoModel.runningProcesses.add(process.uuid!!)
+
+        this.clientRegistry.updateClient(clientInfoModel)
+        this.proxyProcessRegistry.registerDanglingProcess(process)
         this.logger.info("Requested process with name: [${process.name}] on client with Name: [${clientName}]")
     }
 }

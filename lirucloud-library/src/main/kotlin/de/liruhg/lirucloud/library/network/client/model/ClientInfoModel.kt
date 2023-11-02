@@ -12,5 +12,6 @@ data class ClientInfoModel(
     var currentMemoryUsage: Long,
     var currentCpuUsage: Double,
     var responsibleGroups: Set<String>,
-    var channel: Channel? = null
+    var channel: Channel? = null,
+    var runningProcesses: MutableSet<String> = mutableSetOf()
 )

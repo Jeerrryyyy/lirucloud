@@ -4,6 +4,7 @@ import de.liruhg.lirucloud.library.process.AbstractProcess
 import de.liruhg.lirucloud.library.process.ProcessStage
 import de.liruhg.lirucloud.library.process.ProcessType
 import de.liruhg.lirucloud.library.process.ServerMode
+import io.netty.channel.Channel
 
 open class ServerProcess(
     groupName: String,
@@ -16,8 +17,7 @@ open class ServerProcess(
     maxMemory: Int,
     port: Int,
     maxPlayers: Int,
-    joinPower: Int,
-    maintenance: Boolean,
+    channel: Channel? = null,
     val mode: ServerMode
 ) : AbstractProcess(
     groupName,
@@ -30,6 +30,5 @@ open class ServerProcess(
     maxMemory,
     port,
     maxPlayers,
-    joinPower,
-    maintenance
+    channel
 )

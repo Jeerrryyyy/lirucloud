@@ -6,4 +6,5 @@ data class ProxyPluginConfigurationModel(
     val masterAddress: String,
     val masterPort: Int,
     val database: DatabaseConnectionModel,
+    val proxyInformation: ProxyInformationModel
 )

@@ -1,12 +1,13 @@
-package de.liruhg.lirucloud.client.process.proxy
+package de.liruhg.lirucloud.client.process.server.model
 
 import de.liruhg.lirucloud.client.process.InternalCloudProcess
 import de.liruhg.lirucloud.library.process.ProcessStage
 import de.liruhg.lirucloud.library.process.ProcessStreamConsumer
 import de.liruhg.lirucloud.library.process.ProcessType
+import de.liruhg.lirucloud.library.process.ServerMode
 import java.nio.file.Path
 
-class InternalProxyProcess(
+class InternalServerProcess(
     groupName: String,
     name: String?,
     uuid: String?,
@@ -17,11 +18,10 @@ class InternalProxyProcess(
     maxMemory: Int,
     port: Int,
     maxPlayers: Int,
-    joinPower: Int,
-    maintenance: Boolean,
     serverDirectoryPath: Path,
     process: Process,
     processStreamConsumer: ProcessStreamConsumer,
+    val mode: ServerMode
 ) : InternalCloudProcess(
     groupName,
     name,
@@ -33,8 +33,6 @@ class InternalProxyProcess(
     maxMemory,
     port,
     maxPlayers,
-    joinPower,
-    maintenance,
     serverDirectoryPath,
     process,
     processStreamConsumer

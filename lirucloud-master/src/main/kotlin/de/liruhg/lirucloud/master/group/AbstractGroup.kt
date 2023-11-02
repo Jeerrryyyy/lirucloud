@@ -9,4 +9,7 @@ abstract class AbstractGroup(
     val maxPlayers: Int,
     val joinPower: Int,
     val maintenance: Boolean,
+    val maintenanceProtocolMessage: String,
+    val maintenanceMotd: Pair<String, String>,
+    val motd: Pair<String, String>
 )

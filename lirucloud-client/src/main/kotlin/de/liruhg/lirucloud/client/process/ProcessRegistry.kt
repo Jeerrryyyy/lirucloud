@@ -1,19 +1,8 @@
 package de.liruhg.lirucloud.client.process
 
-import de.liruhg.lirucloud.client.LiruCloudClient
-import de.liruhg.lirucloud.library.thread.ThreadPool
-import de.liruhg.lirucloud.library.util.FileUtils
-import org.kodein.di.instance
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import kotlin.io.path.exists
+abstract class ProcessRegistry<T : InternalCloudProcess> {
 
-open class ProcessRegistry<T : InternalCloudProcess> {
-
-    private val logger: Logger = LoggerFactory.getLogger(ProcessRegistry::class.java)
-    private val processes: MutableMap<String, T> = mutableMapOf()
-
-    private val threadPool: ThreadPool by LiruCloudClient.KODEIN.instance()
+    val processes: MutableMap<String, T> = mutableMapOf()
 
     fun registerProcess(process: T) {
         if (this.processes.containsKey(process.uuid)) return
@@ -42,32 +31,5 @@ open class ProcessRegistry<T : InternalCloudProcess> {
         return this.processes.values.sumOf { it.maxMemory }
     }
 
-    fun killAllProcesses() {
-        this.processes.values.forEach {
-            it.process.destroy()
-
-            var attempts = 1
-            while (it.process.isAlive) {
-                this.logger.info("Awaiting shutdown of process with Name: ${it.name} - UUID: ${it.uuid} (Attempt: $attempts/10)")
-
-                Thread.sleep(3000)
-
-                if (attempts >= 10) {
-                    this.logger.warn("Failed to shutdown process with Name: ${it.name} - UUID: ${it.uuid} after 10 attempts. Killing process now.")
-                    it.process.destroyForcibly()
-                    break
-                }
-
-                attempts++
-            }
-
-            while (it.serverDirectoryPath.exists()) {
-                FileUtils.deleteFullDirectory(it.serverDirectoryPath)
-
-                Thread.sleep(3000)
-            }
-
-            this.logger.info("Successfully shutdown process with Name: ${it.name} - UUID: ${it.uuid}")
-        }
-    }
+    abstract fun shutdownProcesses()
 }

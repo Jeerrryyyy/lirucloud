@@ -3,6 +3,7 @@ package de.liruhg.lirucloud.library.process.model
 import de.liruhg.lirucloud.library.process.AbstractProcess
 import de.liruhg.lirucloud.library.process.ProcessStage
 import de.liruhg.lirucloud.library.process.ProcessType
+import io.netty.channel.Channel
 
 open class ProxyProcess(
     groupName: String,
@@ -15,8 +16,7 @@ open class ProxyProcess(
     maxMemory: Int,
     port: Int,
     maxPlayers: Int,
-    joinPower: Int,
-    maintenance: Boolean,
+    channel: Channel? = null
 ) : AbstractProcess(
     groupName,
     name,
@@ -28,6 +28,5 @@ open class ProxyProcess(
     maxMemory,
     port,
     maxPlayers,
-    joinPower,
-    maintenance
+    channel
 )

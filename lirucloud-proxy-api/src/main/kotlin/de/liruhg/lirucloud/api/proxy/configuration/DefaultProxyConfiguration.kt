@@ -19,7 +19,7 @@ class DefaultProxyConfiguration(
         val proxyConfigurationFile = File(Directories.PROXY_PLUGINS_API, "config.json")
 
         if (!proxyConfigurationFile.exists()) {
-            this.logger.info("Cloud configuration file does not exist... Service can not start properly.")
+            this.logger.info("Cloud configuration file does not exist... Process can not start properly.")
             return
         }
 

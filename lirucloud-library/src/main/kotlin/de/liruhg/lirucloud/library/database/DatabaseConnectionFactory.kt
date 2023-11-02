@@ -14,6 +14,8 @@ class DatabaseConnectionFactory {
     lateinit var gridFsBucket: GridFSBucket
     lateinit var filesCollection: MongoCollection<Document>
     lateinit var webUserCollection: MongoCollection<Document>
+    lateinit var proxyGroupsCollection: MongoCollection<Document>
+    lateinit var serverGroupsCollection: MongoCollection<Document>
 
     fun connectDatabase(databaseConnectionModel: DatabaseConnectionModel) {
         val mongoClient: MongoClient = MongoClients.create(databaseConnectionModel.connectionUrl)
@@ -25,6 +27,8 @@ class DatabaseConnectionFactory {
             when (identifier) {
                 "filesCollection" -> this.filesCollection = mongoDatabase.getCollection(collectionName)
                 "webUserCollection" -> this.webUserCollection = mongoDatabase.getCollection(collectionName)
+                "proxyGroupsCollection" -> this.proxyGroupsCollection = mongoDatabase.getCollection(collectionName)
+                "serverGroupsCollection" -> this.serverGroupsCollection = mongoDatabase.getCollection(collectionName)
             }
         }
     }
