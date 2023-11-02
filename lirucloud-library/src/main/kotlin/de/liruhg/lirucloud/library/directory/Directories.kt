@@ -34,5 +34,8 @@ class Directories {
 
         const val PROXY_PLUGINS = "plugins/"
         const val PROXY_PLUGINS_API = "plugins/LiruCloudProxyApi/"
+
+        const val SERVER_PLUGINS = "plugins/"
+        const val SERVER_PLUGINS_API = "plugins/LiruCloudServerApi/"
     }
 }

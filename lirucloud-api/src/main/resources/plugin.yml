@@ -1,0 +1,7 @@
+name: LiruCloudServerApi
+version: 0.0.1
+main: de.liruhg.lirucloud.api.server.LiruCloudServerApi
+author: Jevzo
+description: LiruCloud Server API
+
+commands:

@@ -19,7 +19,7 @@ class KeyReader(
         val clientKeyFile = File("${Directories.CLIENT_KEYS}/client.key")
 
         if (!clientKeyFile.exists()) {
-            this.logger.error("Can't find the slave key in \"${Directories.CLIENT_KEYS}\"! Did you copy it?")
+            this.logger.error("Can't find the client key in \"${Directories.CLIENT_KEYS}\"! Did you copy it?")
             exitProcess(0)
         }
 

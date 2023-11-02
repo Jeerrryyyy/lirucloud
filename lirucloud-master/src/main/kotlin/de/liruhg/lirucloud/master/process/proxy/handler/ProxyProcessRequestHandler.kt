@@ -9,7 +9,7 @@ import de.liruhg.lirucloud.library.util.PortUtils
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.process.ProcessRequestHandler
-import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutRequestProxyProcess
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProxyProcess
 import de.liruhg.lirucloud.master.process.proxy.registry.ProxyProcessRegistry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

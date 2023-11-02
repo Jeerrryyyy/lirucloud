@@ -98,6 +98,8 @@ class UpdateGroupFiles(
     }
 
     private fun updateServerGroup(serverGroupModel: ServerGroupModel) {
+        this.logger.info("Updating group with Name: [${serverGroupModel.name}]")
+
         val templatePath = Path.of("${Directories.MASTER_TEMPLATE_SERVER}/${serverGroupModel.name}")
         val defaultTemplatePath = Path.of("${Directories.MASTER_TEMPLATE_SERVER}/${serverGroupModel.name}/default")
 

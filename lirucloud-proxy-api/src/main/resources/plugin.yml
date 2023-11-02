@@ -1,9 +1,0 @@
-name: LiruCloudProxyApi
-version: 0.0.1
-main: de.liruhg.lirucloud.api.proxy.LiruCloudProxyApi
-author: Jevzo
-description: LiruCloud Proxy API
-
-commands:
-
-

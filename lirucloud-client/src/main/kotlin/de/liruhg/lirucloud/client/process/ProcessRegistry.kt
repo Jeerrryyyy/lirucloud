@@ -27,6 +27,10 @@ abstract class ProcessRegistry<T : InternalCloudProcess> {
         return this.processes.values.filter { it.name == processName }.size
     }
 
+    fun getRunningProcessCount(): Int {
+        return this.processes.size
+    }
+
     fun getTotalMemoryUsage(): Int {
         return this.processes.values.sumOf { it.maxMemory }
     }

@@ -11,16 +11,16 @@ import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestHan
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestServers
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientUpdateLoadStatus
 import de.liruhg.lirucloud.client.process.ProcessRegistry
-import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInProxyUpdateStatus
+import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInProcessUpdateStatus
 import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestProxyProcess
 import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestServerProcess
+import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
+import de.liruhg.lirucloud.client.process.proxy.handler.ProxyProcessRequestHandler
 import de.liruhg.lirucloud.client.process.proxy.model.InternalProxyProcess
 import de.liruhg.lirucloud.client.process.proxy.registry.ProxyProcessRegistry
-import de.liruhg.lirucloud.client.process.proxy.handler.ProxyProcessRequestHandler
-import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
+import de.liruhg.lirucloud.client.process.server.handler.ServerProcessRequestHandler
 import de.liruhg.lirucloud.client.process.server.model.InternalServerProcess
 import de.liruhg.lirucloud.client.process.server.registry.ServerProcessRegistry
-import de.liruhg.lirucloud.client.process.server.handler.ServerProcessRequestHandler
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.client.task.UpdateLoadStatusTask
 import de.liruhg.lirucloud.library.command.CommandManager
@@ -89,8 +89,6 @@ class LiruCloudClient {
 
     private fun initializeDI() {
         KODEIN = DI {
-            bindSingleton { this@LiruCloudClient }
-
             bindSingleton { ThreadPool() }
 
             bindSingleton { RuntimeVars() }
@@ -126,7 +124,7 @@ class LiruCloudClient {
             bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
 
             bindSingleton { ServerProcessRegistry() }
-            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance()) }
+            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance()) }
 
             bindSingleton {
                 val packetRegistry = PacketRegistry()
@@ -157,8 +155,8 @@ class LiruCloudClient {
                     PacketInRequestServerProcess::class.java
                 )
                 packetRegistry.registerIncomingPacket(
-                    PacketId.PACKET_PROXY_UPDATE_STATUS,
-                    PacketInProxyUpdateStatus::class.java
+                    PacketId.PACKET_PROCESS_UPDATE_STATUS,
+                    PacketInProcessUpdateStatus::class.java
                 )
 
                 packetRegistry

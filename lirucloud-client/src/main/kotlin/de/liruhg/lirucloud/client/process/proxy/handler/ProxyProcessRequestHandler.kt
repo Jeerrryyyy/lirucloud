@@ -9,8 +9,8 @@ import de.liruhg.lirucloud.library.database.handler.SyncFileHandler
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.process.ProcessStreamConsumer
 import de.liruhg.lirucloud.library.process.model.ProxyProcess
-import de.liruhg.lirucloud.library.proxy.ProxyInformationModel
-import de.liruhg.lirucloud.library.proxy.ProxyPluginConfigurationModel
+import de.liruhg.lirucloud.library.proxy.PluginConfigurationModel
+import de.liruhg.lirucloud.library.proxy.ProcessInformationModel
 import de.liruhg.lirucloud.library.thread.ThreadPool
 import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.library.util.HashUtils
@@ -72,11 +72,11 @@ class ProxyProcessRequestHandler(
 
             FileUtils.writeClassToJsonFile(
                 File(serverDirectory, "${Directories.PROXY_PLUGINS_API}/config.json"),
-                ProxyPluginConfigurationModel(
+                PluginConfigurationModel(
                     runtimeVars.cloudConfiguration.masterAddress,
                     runtimeVars.cloudConfiguration.masterPort,
                     runtimeVars.cloudConfiguration.database,
-                    ProxyInformationModel(
+                    ProcessInformationModel(
                         request.uuid.orEmpty(),
                         request.name.orEmpty()
                     )

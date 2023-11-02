@@ -4,21 +4,26 @@ import de.liruhg.lirucloud.client.process.ProcessRegistry
 import de.liruhg.lirucloud.client.process.ProcessRequestHandler
 import de.liruhg.lirucloud.client.process.server.config.ServerProperties
 import de.liruhg.lirucloud.client.process.server.model.InternalServerProcess
+import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.library.database.handler.SyncFileHandler
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.process.ProcessStreamConsumer
 import de.liruhg.lirucloud.library.process.model.ServerProcess
+import de.liruhg.lirucloud.library.proxy.PluginConfigurationModel
+import de.liruhg.lirucloud.library.proxy.ProcessInformationModel
 import de.liruhg.lirucloud.library.thread.ThreadPool
 import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.library.util.HashUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.Path
 
 class ServerProcessRequestHandler(
     private val processRegistry: ProcessRegistry<InternalServerProcess>,
     private val fileHandler: SyncFileHandler,
-    private val threadPool: ThreadPool
+    private val threadPool: ThreadPool,
+    private val runtimeVars: RuntimeVars
 ) : ProcessRequestHandler<ServerProcess> {
 
     private val logger: Logger = LoggerFactory.getLogger(ServerProcessRequestHandler::class.java)
@@ -53,6 +58,26 @@ class ServerProcessRequestHandler(
             FileUtils.writeStringToFile(
                 File(serverDirectory, "server.properties"),
                 ServerProperties.getProperties(serverPort = request.port, maxPlayers = request.maxPlayers)
+            )
+
+            FileUtils.createDirectory(Path.of(serverDirectory.path, Directories.SERVER_PLUGINS_API))
+
+            FileUtils.copyFile(
+                File(Directories.CLIENT_KEYS, "client.key"),
+                File(serverDirectory, "${Directories.SERVER_PLUGINS_API}/client.key")
+            )
+
+            FileUtils.writeClassToJsonFile(
+                File(serverDirectory, "${Directories.SERVER_PLUGINS_API}/config.json"),
+                PluginConfigurationModel(
+                    runtimeVars.cloudConfiguration.masterAddress,
+                    runtimeVars.cloudConfiguration.masterPort,
+                    runtimeVars.cloudConfiguration.database,
+                    ProcessInformationModel(
+                        request.uuid.orEmpty(),
+                        request.name.orEmpty()
+                    )
+                )
             )
 
             val processBuilder = ProcessBuilder()

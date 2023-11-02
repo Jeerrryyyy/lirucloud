@@ -30,12 +30,12 @@ import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
 import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
 import de.liruhg.lirucloud.master.network.NetworkServer
+import de.liruhg.lirucloud.master.process.protocol.`in`.PacketInProcessRequestHandshake
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessHandshakeResult
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessUpdateStatus
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProxyProcess
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestServerProcess
 import de.liruhg.lirucloud.master.process.proxy.handler.ProxyProcessRequestHandler
-import de.liruhg.lirucloud.master.process.proxy.protocol.`in`.PacketInProxyProcessRequestHandshake
-import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutProxyHandshakeResult
-import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutProxyUpdateStatus
-import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutRequestProxyProcess
 import de.liruhg.lirucloud.master.process.proxy.registry.ProxyProcessRegistry
 import de.liruhg.lirucloud.master.process.server.handler.ServerProcessRequestHandler
 import de.liruhg.lirucloud.master.process.server.registry.ServerProcessRegistry
@@ -98,8 +98,6 @@ class LiruCloudMaster {
 
     private fun initializeDI() {
         KODEIN = DI {
-            bindSingleton { this@LiruCloudMaster }
-
             bindSingleton { ThreadPool() }
 
             bindSingleton { RuntimeVars() }
@@ -157,8 +155,8 @@ class LiruCloudMaster {
                     PacketInClientUpdateLoadStatus::class.java
                 )
                 packetRegistry.registerIncomingPacket(
-                    PacketId.PACKET_PROXY_REQUEST_HANDSHAKE,
-                    PacketInProxyProcessRequestHandshake::class.java
+                    PacketId.PACKET_PROCESS_REQUEST_HANDSHAKE,
+                    PacketInProcessRequestHandshake::class.java
                 )
 
                 packetRegistry.registerOutgoingPacket(
@@ -174,12 +172,12 @@ class LiruCloudMaster {
                     PacketOutRequestServerProcess::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_PROXY_HANDSHAKE_RESULT,
-                    PacketOutProxyHandshakeResult::class.java
+                    PacketId.PACKET_PROCESS_HANDSHAKE_RESULT,
+                    PacketOutProcessHandshakeResult::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_PROXY_UPDATE_STATUS,
-                    PacketOutProxyUpdateStatus::class.java
+                    PacketId.PACKET_PROCESS_UPDATE_STATUS,
+                    PacketOutProcessUpdateStatus::class.java
                 )
 
                 packetRegistry
