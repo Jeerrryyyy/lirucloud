@@ -1,12 +1,13 @@
 package de.liruhg.lirucloud.master.client
 
 import de.liruhg.lirucloud.library.network.client.model.ClientInfoModel
-import de.liruhg.lirucloud.library.process.AbstractProcess
+import de.liruhg.lirucloud.library.process.CloudProcess
 import io.netty.channel.Channel
+import java.util.concurrent.ConcurrentHashMap
 
 class ClientRegistry {
 
-    private val clients: MutableMap<String, ClientInfoModel> = mutableMapOf()
+    private val clients: ConcurrentHashMap<String, ClientInfoModel> = ConcurrentHashMap()
 
     fun registerClient(clientInfoModel: ClientInfoModel): Boolean {
         if (this.clients.containsKey(clientInfoModel.uuid)) return false
@@ -22,18 +23,16 @@ class ClientRegistry {
         return !this.clients.containsKey(clientInfoModel.uuid)
     }
 
-    fun updateClient(clientInfoModel: ClientInfoModel): Boolean {
-        if (!this.clients.containsKey(clientInfoModel.uuid)) return false
-        this.clients[clientInfoModel.uuid] = clientInfoModel
-
-        return this.clients.containsKey(clientInfoModel.uuid)
+    fun updateClient(clientInfoModel: ClientInfoModel) {
+        this.unregisterClient(clientInfoModel)
+        this.registerClient(clientInfoModel)
     }
 
     fun getClient(uuid: String): ClientInfoModel? {
         return this.clients[uuid]
     }
 
-    fun getClient(process: AbstractProcess): ClientInfoModel? {
+    fun getClient(process: CloudProcess): ClientInfoModel? {
         return this.clients.values.firstOrNull { client ->
             client.runningProcesses.any { it == process.uuid }
         }

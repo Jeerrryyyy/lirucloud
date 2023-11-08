@@ -1,16 +1,16 @@
 package de.liruhg.lirucloud.client.process.proxy.handler
 
+import de.liruhg.lirucloud.client.process.InternalCloudProcess
 import de.liruhg.lirucloud.client.process.ProcessRegistry
 import de.liruhg.lirucloud.client.process.ProcessRequestHandler
 import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
-import de.liruhg.lirucloud.client.process.proxy.model.InternalProxyProcess
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.library.database.handler.SyncFileHandler
 import de.liruhg.lirucloud.library.directory.Directories
+import de.liruhg.lirucloud.library.process.CloudProcess
 import de.liruhg.lirucloud.library.process.ProcessStreamConsumer
-import de.liruhg.lirucloud.library.process.model.ProxyProcess
-import de.liruhg.lirucloud.library.proxy.PluginConfigurationModel
-import de.liruhg.lirucloud.library.proxy.ProcessInformationModel
+import de.liruhg.lirucloud.library.process.model.PluginConfigurationModel
+import de.liruhg.lirucloud.library.process.model.ProcessInformationModel
 import de.liruhg.lirucloud.library.thread.ThreadPool
 import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.library.util.HashUtils
@@ -20,16 +20,16 @@ import java.io.File
 import java.nio.file.Path
 
 class ProxyProcessRequestHandler(
-    private val processRegistry: ProcessRegistry<InternalProxyProcess>,
+    private val processRegistry: ProcessRegistry,
     private val fileHandler: SyncFileHandler,
     private val proxyConfigurationGenerator: ProxyConfigurationGenerator,
     private val threadPool: ThreadPool,
     private val runtimeVars: RuntimeVars
-) : ProcessRequestHandler<ProxyProcess> {
+) : ProcessRequestHandler {
 
     private val logger: Logger = LoggerFactory.getLogger(ProxyProcessRequestHandler::class.java)
 
-    override fun handle(request: ProxyProcess) {
+    override fun handle(request: CloudProcess) {
         this.threadPool.execute({
             val hashedName = HashUtils.hashStringMD5(request.groupName)
 
@@ -55,12 +55,10 @@ class ProxyProcessRequestHandler(
                 File(serverDirectory, "proxy.jar")
             )
 
-            this.proxyConfigurationGenerator.writeConfiguration(
+            this.proxyConfigurationGenerator.generateConfigYaml(
                 serverDirectory,
                 request.port,
-                request.maxPlayers,
-                60,
-                "§aLiruCloud §7- §ecreated by Jevzo"
+                request.maxPlayers
             )
 
             FileUtils.createDirectory(Path.of(serverDirectory.path, Directories.PROXY_PLUGINS_API))
@@ -96,13 +94,14 @@ class ProxyProcessRequestHandler(
             val process = processBuilder.start()
             val processStreamConsumer = ProcessStreamConsumer(process.inputStream)
 
-            val internalProxyProcess = InternalProxyProcess(
+            val internalProxyProcess = InternalCloudProcess(
                 request.groupName,
                 request.name,
                 request.uuid,
                 request.ip,
                 request.type,
                 request.stage,
+                request.mode,
                 request.minMemory,
                 request.maxMemory,
                 request.port,
@@ -115,7 +114,7 @@ class ProxyProcessRequestHandler(
             this.threadPool.execute(processStreamConsumer)
 
             this.processRegistry.registerProcess(internalProxyProcess)
-            this.logger.info("Successfully started process with Name: [${request.name}]")
+            this.logger.info("Successfully started process with Name: [${internalProxyProcess.name}] - UUID: [${internalProxyProcess.uuid}]")
         }, false)
     }
 }

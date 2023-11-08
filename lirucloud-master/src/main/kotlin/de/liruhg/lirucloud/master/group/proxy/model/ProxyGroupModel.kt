@@ -2,7 +2,7 @@ package de.liruhg.lirucloud.master.group.proxy.model
 
 import de.liruhg.lirucloud.master.group.AbstractGroup
 
-open class ProxyGroupModel(
+class ProxyGroupModel(
     name: String,
     maxServersOnline: Int,
     minServersOnline: Int,

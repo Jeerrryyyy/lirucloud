@@ -8,6 +8,10 @@ import de.liruhg.lirucloud.api.global.network.NetworkClient
 import de.liruhg.lirucloud.api.global.network.protocol.`in`.PacketInProcessHandshakeResult
 import de.liruhg.lirucloud.api.global.network.protocol.out.PacketOutProcessRequestHandshake
 import de.liruhg.lirucloud.api.global.runtime.RuntimeVars
+import de.liruhg.lirucloud.api.proxy.listener.ServerConnectEventListener
+import de.liruhg.lirucloud.api.proxy.server.ServerRegistry
+import de.liruhg.lirucloud.api.proxy.server.protocol.`in`.PacketInProxyRegisterServer
+import de.liruhg.lirucloud.api.proxy.server.protocol.out.PacketOutProxyRegisteredServer
 import de.liruhg.lirucloud.library.configuration.ConfigurationExecutor
 import de.liruhg.lirucloud.library.database.DatabaseConnectionFactory
 import de.liruhg.lirucloud.library.directory.Directories
@@ -61,6 +65,8 @@ class LiruCloudProxyApi : Plugin() {
             runtimeVars.pluginConfiguration.masterAddress,
             runtimeVars.pluginConfiguration.masterPort
         )
+
+        this.registerListeners()
     }
 
     override fun onDisable() {
@@ -87,6 +93,8 @@ class LiruCloudProxyApi : Plugin() {
                 configurationExecutor
             }
 
+            bindSingleton { ServerRegistry(instance(), instance()) }
+
             bindSingleton {
                 val packetRegistry = PacketRegistry()
 
@@ -94,10 +102,18 @@ class LiruCloudProxyApi : Plugin() {
                     PacketId.PACKET_PROCESS_REQUEST_HANDSHAKE,
                     PacketOutProcessRequestHandshake::class.java
                 )
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_PROXY_REGISTERED_SERVER,
+                    PacketOutProxyRegisteredServer::class.java
+                )
 
                 packetRegistry.registerIncomingPacket(
                     PacketId.PACKET_PROCESS_HANDSHAKE_RESULT,
                     PacketInProcessHandshakeResult::class.java
+                )
+                packetRegistry.registerIncomingPacket(
+                    PacketId.PACKET_PROXY_REGISTER_SERVER,
+                    PacketInProxyRegisterServer::class.java
                 )
 
                 packetRegistry
@@ -105,5 +121,9 @@ class LiruCloudProxyApi : Plugin() {
 
             bindSingleton { NetworkClient(instance(), instance(), instance()) }
         }
+    }
+
+    private fun registerListeners() {
+        this.proxy.pluginManager.registerListener(this, ServerConnectEventListener())
     }
 }

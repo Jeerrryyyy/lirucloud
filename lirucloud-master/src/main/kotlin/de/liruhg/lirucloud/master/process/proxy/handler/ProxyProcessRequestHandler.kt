@@ -2,25 +2,26 @@ package de.liruhg.lirucloud.master.process.proxy.handler
 
 import de.liruhg.lirucloud.library.network.client.model.ClientInfoModel
 import de.liruhg.lirucloud.library.network.util.NetworkUtil
+import de.liruhg.lirucloud.library.process.CloudProcess
+import de.liruhg.lirucloud.library.process.ProcessMode
 import de.liruhg.lirucloud.library.process.ProcessStage
 import de.liruhg.lirucloud.library.process.ProcessType
-import de.liruhg.lirucloud.library.process.model.ProxyProcess
 import de.liruhg.lirucloud.library.util.PortUtils
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
-import de.liruhg.lirucloud.master.process.ProcessRequestHandler
-import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProxyProcess
-import de.liruhg.lirucloud.master.process.proxy.registry.ProxyProcessRegistry
+import de.liruhg.lirucloud.master.process.handler.ProcessRequestHandler
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProcess
+import de.liruhg.lirucloud.master.process.registry.ProcessRegistry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 
 class ProxyProcessRequestHandler(
     private val networkUtil: NetworkUtil,
-    private val proxyProcessRegistry: ProxyProcessRegistry,
     private val clientRegistry: ClientRegistry,
-    private val proxyGroupHandler: ProxyGroupHandler
-) : ProcessRequestHandler<ProxyProcess> {
+    private val proxyGroupHandler: ProxyGroupHandler,
+    private val processRegistry: ProcessRegistry
+) : ProcessRequestHandler {
 
     private val logger: Logger = LoggerFactory.getLogger(ProxyProcessRequestHandler::class.java)
 
@@ -31,7 +32,7 @@ class ProxyProcessRequestHandler(
             .toSet()
 
         for (group in responsibleGroups) {
-            val currentlyRunning = this.proxyProcessRegistry.getRunningProcessCount(group.name)
+            val currentlyRunning = this.processRegistry.getRunningProcessCount(group.name)
             val clientName = "${clientInfoModel.name}${clientInfoModel.delimiter}${clientInfoModel.suffix}"
             val channel = clientInfoModel.channel
 
@@ -56,13 +57,14 @@ class ProxyProcessRequestHandler(
                 }
 
                 this.requestProcesses(
-                    count, ProxyProcess(
+                    count, CloudProcess(
                         groupName = group.name,
                         name = null,
                         uuid = null,
                         ip = ip,
                         type = ProcessType.PROXY,
                         stage = ProcessStage.STARTING,
+                        mode = ProcessMode.NONE,
                         minMemory = group.minMemory,
                         maxMemory = group.maxMemory,
                         port = -1,
@@ -84,13 +86,14 @@ class ProxyProcessRequestHandler(
                 }
 
                 this.requestProcess(
-                    ProxyProcess(
+                    CloudProcess(
                         groupName = group.name,
                         name = null,
                         uuid = null,
                         ip = ip,
                         type = ProcessType.PROXY,
                         stage = ProcessStage.STARTING,
+                        mode = ProcessMode.NONE,
                         minMemory = group.minMemory,
                         maxMemory = group.maxMemory,
                         port = -1,
@@ -101,18 +104,21 @@ class ProxyProcessRequestHandler(
         }
     }
 
-    override fun requestProcesses(count: Int, process: ProxyProcess) {
+    override fun requestProcesses(count: Int, process: CloudProcess) {
         (1..count).forEach { _ ->
             this.requestProcess(process)
         }
     }
 
-    override fun requestProcess(process: ProxyProcess) {
+    override fun requestProcess(process: CloudProcess) {
         val groupName = process.groupName
-        val currentlyRunning = this.proxyProcessRegistry.getRunningProcessCount(groupName)
+        val currentlyRunning = this.processRegistry.getRunningProcessCount(groupName)
 
         process.uuid = UUID.randomUUID().toString()
+
         process.port = PortUtils.getNextFreePort(25565)
+        PortUtils.blockPort(process.port)
+
         process.name =
             "$groupName-${if ((currentlyRunning + 1) >= 10) "${currentlyRunning + 1}" else "0${currentlyRunning + 1}"}"
 
@@ -131,12 +137,12 @@ class ProxyProcessRequestHandler(
             return
         }
 
-        this.networkUtil.sendPacket(PacketOutRequestProxyProcess(process), channel)
+        this.networkUtil.sendPacket(PacketOutRequestProcess(process), channel)
 
         clientInfoModel.runningProcesses.add(process.uuid!!)
 
         this.clientRegistry.updateClient(clientInfoModel)
-        this.proxyProcessRegistry.registerDanglingProcess(process)
+        this.processRegistry.addProcess(process)
         this.logger.info("Requested process with name: [${process.name}] on client with Name: [${clientName}]")
     }
 }

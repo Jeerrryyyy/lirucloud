@@ -2,16 +2,16 @@ package de.liruhg.lirucloud.master.process.protocol.`in`
 
 import de.liruhg.lirucloud.library.network.protocol.Packet
 import de.liruhg.lirucloud.library.network.util.NetworkUtil
-import de.liruhg.lirucloud.library.process.AbstractProcess
+import de.liruhg.lirucloud.library.process.CloudProcess
 import de.liruhg.lirucloud.library.process.ProcessStage
-import de.liruhg.lirucloud.library.process.model.ProxyProcess
-import de.liruhg.lirucloud.library.process.model.ServerProcess
+import de.liruhg.lirucloud.library.process.ProcessType
 import de.liruhg.lirucloud.master.LiruCloudMaster
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
-import de.liruhg.lirucloud.master.process.ProcessRegistry
+import de.liruhg.lirucloud.master.process.registry.ProcessRegistry
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessHandshakeResult
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessUpdateStatus
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProxyRegisterServer
 import de.liruhg.lirucloud.master.runtime.RuntimeVars
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -23,8 +23,7 @@ class PacketInProcessRequestHandshake : Packet {
 
     private val logger: Logger = LoggerFactory.getLogger(PacketInProcessRequestHandshake::class.java)
 
-    private val proxyProcessRegistry: ProcessRegistry<ProxyProcess> by LiruCloudMaster.KODEIN.instance()
-    private val serverProcessRegistry: ProcessRegistry<ServerProcess> by LiruCloudMaster.KODEIN.instance()
+    private val processRegistry: ProcessRegistry by LiruCloudMaster.KODEIN.instance()
     private val clientRegistry: ClientRegistry by LiruCloudMaster.KODEIN.instance()
     private val networkUtil: NetworkUtil by LiruCloudMaster.KODEIN.instance()
     private val runtimeVars: RuntimeVars by LiruCloudMaster.KODEIN.instance()
@@ -47,17 +46,12 @@ class PacketInProcessRequestHandshake : Packet {
             return
         }
 
-        val proxyProcess = this.proxyProcessRegistry.getDanglingProcess(this.uuid)
+        this.logger.info("Received handshake of process with UUID: [${this.uuid}]")
 
-        if (proxyProcess != null) {
-            this.handleProcess(proxyProcess, channel)
-            return
-        }
+        val process = this.processRegistry.getProcess(this.uuid)
 
-        val serverProcess = this.serverProcessRegistry.getDanglingProcess(this.uuid)
-
-        if (serverProcess != null) {
-            this.handleProcess(serverProcess, channel)
+        if (process != null) {
+            this.handleProcess(process, channel)
             return
         }
 
@@ -71,41 +65,50 @@ class PacketInProcessRequestHandshake : Packet {
         channel.close()
     }
 
-    private fun handleProcess(process: AbstractProcess, channel: Channel) {
+    private fun handleProcess(process: CloudProcess, channel: Channel) {
         process.channel = channel
-        process.stage = ProcessStage.RUNNING
 
-        this.networkConnectionRegistry.unregisterDanglingConnection(channel)
+        this.networkConnectionRegistry.unregisterDanglingConnection(channel.id())
 
-        when (process) {
-            is ProxyProcess -> {
-                this.proxyProcessRegistry.unregisterDanglingProcess(process)
-                this.proxyProcessRegistry.registerProcess(process)
+        when (process.type) {
+            ProcessType.PROXY -> {
+                process.stage = ProcessStage.RUNNING
+
+                val clientInfoModel = this.clientRegistry.getClient(process)
+
+                if (clientInfoModel == null) {
+                    this.logger.warn("Received handshake for unknown client of process with UUID: [${this.uuid}]")
+
+                    channel.close()
+                    return
+                }
+
+                this.networkUtil.sendPacket(
+                    PacketOutProcessUpdateStatus(process.uuid!!, process.stage),
+                    clientInfoModel.channel!!
+                )
             }
 
-            is ServerProcess -> {
-                this.serverProcessRegistry.unregisterDanglingProcess(process)
-                this.serverProcessRegistry.registerProcess(process)
+            ProcessType.SERVER -> {
+                this.processRegistry.processes.values.filter { it.type == ProcessType.PROXY }.forEach { proxyProcess ->
+                    this.networkUtil.sendPacket(
+                        PacketOutProxyRegisterServer(
+                            process.uuid!!,
+                            process.name!!,
+                            process.mode,
+                            process.ip,
+                            process.port
+                        ),
+                        proxyProcess.channel!!
+                    )
+                }
             }
         }
+
 
         this.networkUtil.sendPacket(
             PacketOutProcessHandshakeResult("Successfully registered process", true),
             channel
-        )
-
-        val clientInfoModel = this.clientRegistry.getClient(process)
-
-        if (clientInfoModel == null) {
-            this.logger.warn("Received handshake for unknown client of process with UUID: [${this.uuid}]")
-
-            channel.close()
-            return
-        }
-
-        this.networkUtil.sendPacket(
-            PacketOutProcessUpdateStatus(process.uuid!!, process.stage),
-            clientInfoModel.channel!!
         )
 
         this.logger.info("Successfully registered process with UUID: [${process.uuid}] - Name [${process.name}]")

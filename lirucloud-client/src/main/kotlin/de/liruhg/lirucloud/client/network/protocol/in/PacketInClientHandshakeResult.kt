@@ -1,7 +1,7 @@
 package de.liruhg.lirucloud.client.network.protocol.`in`
 
 import de.liruhg.lirucloud.client.LiruCloudClient
-import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestServers
+import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestProcesses
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.library.network.protocol.Packet
 import de.liruhg.lirucloud.library.network.util.NetworkUtil
@@ -28,6 +28,6 @@ class PacketInClientHandshakeResult : Packet {
 
         this.logger.info("Handshake result received with Message: [$message] - Success: [$success]")
 
-        this.networkUtil.sendPacket(PacketOutClientRequestServers(), this.runtimeVars.masterChannel)
+        this.networkUtil.sendPacket(PacketOutClientRequestProcesses(), this.runtimeVars.masterChannel)
     }
 }

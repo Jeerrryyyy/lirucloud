@@ -1,6 +1,8 @@
 package de.liruhg.lirucloud.client.process
 
-interface ProcessRequestHandler<T> {
+import de.liruhg.lirucloud.library.process.CloudProcess
 
-    fun handle(request: T)
+interface ProcessRequestHandler {
+
+    fun handle(request: CloudProcess)
 }

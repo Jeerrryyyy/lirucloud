@@ -7,12 +7,10 @@ class ProxyConfigurationGenerator {
 
     private val yaml: Yaml = Yaml()
 
-    fun writeConfiguration(
+    fun generateConfigYaml(
         serverPath: File,
         port: Int,
         maxPlayers: Int,
-        tabSize: Int,
-        motd: String,
     ) {
         val configFile = File(serverPath, "config.yml")
 
@@ -28,6 +26,7 @@ class ProxyConfigurationGenerator {
             "player_limit" to maxPlayers,
             "permissions" to mapOf(
                 "default" to listOf("none"),
+                "admin" to listOf("bungeecord.command.server")
             ),
             "timeout" to 30000,
             "log_commands" to false,
@@ -35,30 +34,30 @@ class ProxyConfigurationGenerator {
             "online_mode" to true,
             "disabled_commands" to listOf("none"),
             "servers" to mapOf(
-                "dogpiss" to mapOf(
-                    "motd" to "&1Forced Non Existing Server",
-                    "address" to "localhost:59000",
+                "Fallback" to mapOf(
+                    "motd" to "&1Forced lirucloud fallback server",
+                    "address" to "localhost:60000",
                     "restricted" to false
                 )
             ),
             "listeners" to listOf(
                 mapOf(
                     "query_port" to port,
-                    "motd" to motd,
+                    "motd" to "§aLiruCloud §7- §ecreated by Jevzo",
                     "tab_list" to "SERVER",
                     "query_enabled" to false,
                     "proxy_protocol" to false,
                     "forced_hosts" to mapOf("pvp.md-5.net" to "dogpiss"),
                     "ping_passthrough" to false,
-                    "priorities" to listOf("dogpiss"),
+                    "priorities" to listOf("Fallback"),
                     "bind_local_address" to true,
                     "host" to "0.0.0.0:$port",
                     "max_players" to maxPlayers,
-                    "tab_size" to tabSize,
+                    "tab_size" to 60,
                     "force_default_server" to false
                 )
             ),
-            "ip_forward" to false,
+            "ip_forward" to true,
             "remote_ping_timeout" to 5000,
             "prevent_proxy_connections" to false,
             "groups" to mapOf("Jevzo" to listOf("admin")),

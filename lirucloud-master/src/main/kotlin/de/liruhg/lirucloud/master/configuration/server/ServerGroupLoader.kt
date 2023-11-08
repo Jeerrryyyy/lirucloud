@@ -1,7 +1,7 @@
 package de.liruhg.lirucloud.master.configuration.server
 
 import de.liruhg.lirucloud.library.configuration.Configuration
-import de.liruhg.lirucloud.library.process.ServerMode
+import de.liruhg.lirucloud.library.process.ProcessMode
 import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
 import de.liruhg.lirucloud.master.group.server.model.ServerGroupModel
 import org.slf4j.Logger
@@ -33,7 +33,7 @@ class ServerGroupLoader(
                 motd = Pair("§cFirstline", "§cSecondline"),
                 template = "default",
                 newServerPercentage = 100,
-                mode = ServerMode.LOBBY,
+                mode = ProcessMode.LOBBY,
                 randomTemplateMode = false,
                 templateModes = mutableSetOf()
             )

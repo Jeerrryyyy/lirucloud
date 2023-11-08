@@ -87,7 +87,7 @@ class PacketInClientRequestHandshake : Packet {
             ), channelHandlerContext.channel()
         )
 
-        this.networkConnectionRegistry.unregisterDanglingConnection(channelHandlerContext.channel())
+        this.networkConnectionRegistry.unregisterDanglingConnection(channelHandlerContext.channel().id())
 
         this.logger.info(
             "Successfully registered Client with Name: [$clientName] - Remote: [${

@@ -1,26 +1,40 @@
 package de.liruhg.lirucloud.client.process
 
-abstract class ProcessRegistry<T : InternalCloudProcess> {
+import de.liruhg.lirucloud.library.process.ProcessType
+import de.liruhg.lirucloud.library.util.FileUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.exists
 
-    val processes: MutableMap<String, T> = mutableMapOf()
+class ProcessRegistry {
 
-    fun registerProcess(process: T) {
+    private val logger: Logger = LoggerFactory.getLogger(ProcessRegistry::class.java)
+
+    private val processes: ConcurrentHashMap<String, InternalCloudProcess> = ConcurrentHashMap()
+
+    fun registerProcess(process: InternalCloudProcess) {
         if (this.processes.containsKey(process.uuid)) return
 
         this.processes[process.uuid!!] = process
     }
 
-    fun unregisterProcess(process: T) {
+    fun unregisterProcess(process: InternalCloudProcess) {
         this.processes.remove(process.uuid)
     }
 
-    fun updateProcess(process: T) {
+    fun updateProcess(process: InternalCloudProcess) {
         this.unregisterProcess(process)
         this.registerProcess(process)
     }
 
-    fun getProcess(uuid: String): T? {
+    fun getProcess(uuid: String): InternalCloudProcess? {
         return this.processes[uuid]
+    }
+
+    fun getProcessByName(name: String): InternalCloudProcess? {
+        return this.processes.values.firstOrNull { it.name == name }
     }
 
     fun getRunningProcessCount(processName: String): Int {
@@ -35,5 +49,47 @@ abstract class ProcessRegistry<T : InternalCloudProcess> {
         return this.processes.values.sumOf { it.maxMemory }
     }
 
-    abstract fun shutdownProcesses()
+    fun shutdownServers() {
+        this.processes.values.filter { it.type == ProcessType.SERVER }.forEach {
+            try {
+                val bufferedWriter = it.process.outputWriter()
+                bufferedWriter.write("stop\n")
+                bufferedWriter.flush()
+
+                it.process.waitFor()
+
+                while (it.serverDirectoryPath.exists()) {
+                    FileUtils.deleteFullDirectory(it.serverDirectoryPath)
+
+                    Thread.sleep(3000)
+                }
+
+                this.logger.info("Successfully shutdown process with Name: ${it.name} - UUID: ${it.uuid}")
+            } catch (e: IOException) {
+                this.logger.error("Failed to shutdown process with Name: ${it.name} - UUID: ${it.uuid}")
+            }
+        }
+    }
+
+    fun shutdownProxies() {
+        this.processes.values.filter { it.type == ProcessType.PROXY }.forEach {
+            try {
+                val bufferedWriter = it.process.outputWriter()
+                bufferedWriter.write("end\n")
+                bufferedWriter.flush()
+
+                it.process.waitFor()
+
+                while (it.serverDirectoryPath.exists()) {
+                    FileUtils.deleteFullDirectory(it.serverDirectoryPath)
+
+                    Thread.sleep(3000)
+                }
+
+                this.logger.info("Successfully shutdown process with Name: ${it.name} - UUID: ${it.uuid}")
+            } catch (e: IOException) {
+                this.logger.error("Failed to shutdown process with Name: ${it.name} - UUID: ${it.uuid}")
+            }
+        }
+    }
 }

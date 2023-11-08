@@ -1,7 +1,8 @@
 package de.liruhg.lirucloud.library.process
 
-enum class ServerMode {
+enum class ProcessMode {
 
+    NONE,
     LOBBY,
     DYNAMIC,
     STATIC,

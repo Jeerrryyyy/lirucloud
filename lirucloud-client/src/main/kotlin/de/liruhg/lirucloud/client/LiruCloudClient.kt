@@ -1,5 +1,6 @@
 package de.liruhg.lirucloud.client
 
+import de.liruhg.lirucloud.client.command.ExecuteCommand
 import de.liruhg.lirucloud.client.configuration.DefaultCloudConfiguration
 import de.liruhg.lirucloud.client.configuration.DefaultFolderCreator
 import de.liruhg.lirucloud.client.configuration.KeyReader
@@ -8,19 +9,15 @@ import de.liruhg.lirucloud.client.configuration.server.ServerSoftwareDownloader
 import de.liruhg.lirucloud.client.network.NetworkClient
 import de.liruhg.lirucloud.client.network.protocol.`in`.PacketInClientHandshakeResult
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestHandshake
-import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestServers
+import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestProcesses
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientUpdateLoadStatus
 import de.liruhg.lirucloud.client.process.ProcessRegistry
 import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInProcessUpdateStatus
-import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestProxyProcess
-import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestServerProcess
+import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestProcess
 import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
 import de.liruhg.lirucloud.client.process.proxy.handler.ProxyProcessRequestHandler
-import de.liruhg.lirucloud.client.process.proxy.model.InternalProxyProcess
-import de.liruhg.lirucloud.client.process.proxy.registry.ProxyProcessRegistry
+import de.liruhg.lirucloud.client.process.server.config.ServerConfigGenerator
 import de.liruhg.lirucloud.client.process.server.handler.ServerProcessRequestHandler
-import de.liruhg.lirucloud.client.process.server.model.InternalServerProcess
-import de.liruhg.lirucloud.client.process.server.registry.ServerProcessRegistry
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.client.task.UpdateLoadStatusTask
 import de.liruhg.lirucloud.library.command.CommandManager
@@ -78,8 +75,8 @@ class LiruCloudClient {
     fun shutdownGracefully() {
         this.logger.info("Shutting down LiruCloud gracefully... Please be patient.")
 
-        KODEIN.direct.instance<ProcessRegistry<InternalServerProcess>>().shutdownProcesses()
-        KODEIN.direct.instance<ProcessRegistry<InternalProxyProcess>>().shutdownProcesses()
+        KODEIN.direct.instance<ProcessRegistry>().shutdownServers()
+        KODEIN.direct.instance<ProcessRegistry>().shutdownProxies()
         KODEIN.direct.instance<CommandManager>().stop()
         KODEIN.direct.instance<NetworkClient>().shutdownGracefully()
         KODEIN.direct.instance<ThreadPool>().shutdown()
@@ -113,18 +110,19 @@ class LiruCloudClient {
                 val commandManager = CommandManager(instance())
 
                 commandManager.registerCommand(CloudExitCommand())
+                commandManager.registerCommand(ExecuteCommand(instance()))
                 commandManager.registerCommand(CloudHelpCommand(commandManager))
 
                 commandManager
             }
 
-            bindSingleton { ProxyConfigurationGenerator() }
+            bindSingleton { ProcessRegistry() }
 
-            bindSingleton { ProxyProcessRegistry() }
+            bindSingleton { ProxyConfigurationGenerator() }
             bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
 
-            bindSingleton { ServerProcessRegistry() }
-            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance()) }
+            bindSingleton { ServerConfigGenerator() }
+            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
 
             bindSingleton {
                 val packetRegistry = PacketRegistry()
@@ -134,8 +132,8 @@ class LiruCloudClient {
                     PacketOutClientRequestHandshake::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_REQUEST_SERVERS,
-                    PacketOutClientRequestServers::class.java
+                    PacketId.PACKET_REQUEST_PROCESSES,
+                    PacketOutClientRequestProcesses::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
                     PacketId.PACKET_UPDATE_LOAD_STATUS,
@@ -147,12 +145,8 @@ class LiruCloudClient {
                     PacketInClientHandshakeResult::class.java
                 )
                 packetRegistry.registerIncomingPacket(
-                    PacketId.PACKET_REQUEST_PROXY_PROCESS,
-                    PacketInRequestProxyProcess::class.java
-                )
-                packetRegistry.registerIncomingPacket(
-                    PacketId.PACKET_REQUEST_SERVER_PROCESS,
-                    PacketInRequestServerProcess::class.java
+                    PacketId.PACKET_REQUEST_PROCESS,
+                    PacketInRequestProcess::class.java
                 )
                 packetRegistry.registerIncomingPacket(
                     PacketId.PACKET_PROCESS_UPDATE_STATUS,

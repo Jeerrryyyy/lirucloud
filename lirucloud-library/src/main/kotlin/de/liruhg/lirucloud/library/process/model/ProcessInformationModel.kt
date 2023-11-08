@@ -1,4 +1,4 @@
-package de.liruhg.lirucloud.library.proxy
+package de.liruhg.lirucloud.library.process.model
 
 data class ProcessInformationModel(
     val uuid: String,

@@ -1,16 +1,17 @@
 package de.liruhg.lirucloud.client.process.server.handler
 
+import de.liruhg.lirucloud.client.process.InternalCloudProcess
 import de.liruhg.lirucloud.client.process.ProcessRegistry
 import de.liruhg.lirucloud.client.process.ProcessRequestHandler
+import de.liruhg.lirucloud.client.process.server.config.ServerConfigGenerator
 import de.liruhg.lirucloud.client.process.server.config.ServerProperties
-import de.liruhg.lirucloud.client.process.server.model.InternalServerProcess
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.library.database.handler.SyncFileHandler
 import de.liruhg.lirucloud.library.directory.Directories
+import de.liruhg.lirucloud.library.process.CloudProcess
 import de.liruhg.lirucloud.library.process.ProcessStreamConsumer
-import de.liruhg.lirucloud.library.process.model.ServerProcess
-import de.liruhg.lirucloud.library.proxy.PluginConfigurationModel
-import de.liruhg.lirucloud.library.proxy.ProcessInformationModel
+import de.liruhg.lirucloud.library.process.model.PluginConfigurationModel
+import de.liruhg.lirucloud.library.process.model.ProcessInformationModel
 import de.liruhg.lirucloud.library.thread.ThreadPool
 import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.library.util.HashUtils
@@ -20,15 +21,16 @@ import java.io.File
 import java.nio.file.Path
 
 class ServerProcessRequestHandler(
-    private val processRegistry: ProcessRegistry<InternalServerProcess>,
+    private val processRegistry: ProcessRegistry,
     private val fileHandler: SyncFileHandler,
     private val threadPool: ThreadPool,
-    private val runtimeVars: RuntimeVars
-) : ProcessRequestHandler<ServerProcess> {
+    private val runtimeVars: RuntimeVars,
+    private val serverConfigGenerator: ServerConfigGenerator
+) : ProcessRequestHandler {
 
     private val logger: Logger = LoggerFactory.getLogger(ServerProcessRequestHandler::class.java)
 
-    override fun handle(request: ServerProcess) {
+    override fun handle(request: CloudProcess) {
         this.threadPool.execute({
             val hashedName = HashUtils.hashStringMD5(request.groupName)
 
@@ -59,6 +61,9 @@ class ServerProcessRequestHandler(
                 File(serverDirectory, "server.properties"),
                 ServerProperties.getProperties(serverPort = request.port, maxPlayers = request.maxPlayers)
             )
+
+            this.serverConfigGenerator.generateBukkitYaml(serverDirectory)
+            this.serverConfigGenerator.generateSpigotYaml(serverDirectory)
 
             FileUtils.createDirectory(Path.of(serverDirectory.path, Directories.SERVER_PLUGINS_API))
 
@@ -93,27 +98,27 @@ class ServerProcessRequestHandler(
             val process = processBuilder.start()
             val processStreamConsumer = ProcessStreamConsumer(process.inputStream)
 
-            val internalServerProcess = InternalServerProcess(
+            val internalServerProcess = InternalCloudProcess(
                 request.groupName,
                 request.name,
                 request.uuid,
                 request.ip,
                 request.type,
                 request.stage,
+                request.mode,
                 request.minMemory,
                 request.maxMemory,
                 request.port,
                 request.maxPlayers,
                 serverDirectory.toPath(),
                 process,
-                processStreamConsumer,
-                request.mode
+                processStreamConsumer
             )
 
             this.threadPool.execute(processStreamConsumer)
 
             this.processRegistry.registerProcess(internalServerProcess)
-            this.logger.info("Successfully started process with Name: [${request.name}]")
+            this.logger.info("Successfully started process with Name: [${internalServerProcess.name}] - UUID: [${internalServerProcess.uuid}]")
         }, false)
     }
 }

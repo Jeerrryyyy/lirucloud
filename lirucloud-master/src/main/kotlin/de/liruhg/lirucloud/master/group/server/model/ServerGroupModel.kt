@@ -1,9 +1,9 @@
 package de.liruhg.lirucloud.master.group.server.model
 
-import de.liruhg.lirucloud.library.process.ServerMode
+import de.liruhg.lirucloud.library.process.ProcessMode
 import de.liruhg.lirucloud.master.group.AbstractGroup
 
-open class ServerGroupModel(
+class ServerGroupModel(
     name: String,
     maxServersOnline: Int,
     minServersOnline: Int,
@@ -17,7 +17,7 @@ open class ServerGroupModel(
     motd: Pair<String, String>,
     val template: String,
     var newServerPercentage: Int,
-    var mode: ServerMode,
+    var mode: ProcessMode,
     var randomTemplateMode: Boolean,
     var templateModes: MutableSet<String>,
 ) : AbstractGroup(

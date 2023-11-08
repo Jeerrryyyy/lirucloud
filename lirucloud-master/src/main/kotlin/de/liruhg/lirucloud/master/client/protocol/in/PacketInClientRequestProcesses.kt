@@ -10,9 +10,9 @@ import org.kodein.di.instance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class PacketInClientRequestServers : Packet {
+class PacketInClientRequestProcesses : Packet {
 
-    private val logger: Logger = LoggerFactory.getLogger(PacketInClientRequestServers::class.java)
+    private val logger: Logger = LoggerFactory.getLogger(PacketInClientRequestProcesses::class.java)
 
     private val clientRegistry: ClientRegistry by LiruCloudMaster.KODEIN.instance()
 

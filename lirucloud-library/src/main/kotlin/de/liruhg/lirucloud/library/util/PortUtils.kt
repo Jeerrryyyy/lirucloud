@@ -5,7 +5,9 @@ import java.net.ServerSocket
 class PortUtils {
 
     companion object {
-        fun isPortFree(port: Int): Boolean {
+        private val usedPorts: MutableSet<Int> = mutableSetOf()
+
+        private fun isPortFree(port: Int): Boolean {
             return try {
                 val serverSocket = ServerSocket(port)
                 serverSocket.close()
@@ -17,11 +19,21 @@ class PortUtils {
         }
 
         fun getNextFreePort(startPort: Int): Int {
-            return if (this.isPortFree(startPort)) {
-                startPort
-            } else {
-                this.getNextFreePort(startPort)
+            var port = startPort
+
+            while (!this.isPortFree(port) || this.usedPorts.contains(port)) {
+                port++
             }
+
+            return port
+        }
+
+        fun blockPort(port: Int) {
+            this.usedPorts.add(port)
+        }
+
+        fun unblockPort(port: Int) {
+            this.usedPorts.remove(port)
         }
     }
 }

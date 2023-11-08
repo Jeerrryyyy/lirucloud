@@ -16,17 +16,17 @@ class CheckDanglingConnectionsTask : TimerTask() {
     override fun run() {
         val current = System.currentTimeMillis()
 
-        this.networkConnectionRegistry.getDanglingConnections().forEach { (channel, maxTimeAlive) ->
-            if (current > maxTimeAlive) {
+        this.networkConnectionRegistry.getDanglingConnections().forEach { (channelId, pair) ->
+            if (current > pair.first) {
                 this.logger.info(
                     "Removing dangling connection Remote: [${
-                        channel.remoteAddress().toString().replace("/", "")
-                    }] - Diff: [${current - maxTimeAlive}ms]"
+                        pair.second.remoteAddress().toString().replace("/", "")
+                    }] - Diff: [${current - pair.first}ms]"
                 )
 
-                this.networkConnectionRegistry.unregisterDanglingConnection(channel)
+                this.networkConnectionRegistry.unregisterDanglingConnection(channelId)
 
-                channel.close()
+                pair.second.close()
             }
         }
     }

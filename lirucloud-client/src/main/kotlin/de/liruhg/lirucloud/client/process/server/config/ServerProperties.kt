@@ -6,7 +6,7 @@ class ServerProperties {
         fun getProperties(
             viewDistance: Int = 10,
             maxBuildHeight: Int = 256,
-            serverIp: String = "",
+            serverIp: String = "127.0.0.1",
             levelSeed: String = "",
             gameMode: Int = 0,
             serverPort: Int = 25565,
@@ -20,7 +20,7 @@ class ServerProperties {
             playerIdleTimeout: Int = 0,
             levelName: String = "world",
             motd: String = "Default LiruCloud Server",
-            announcePlayerAchievements: Boolean = true,
+            announcePlayerAchievements: Boolean = false,
             forceGameMode: Boolean = false,
             hardcore: Boolean = false,
             whitelist: Boolean = false,

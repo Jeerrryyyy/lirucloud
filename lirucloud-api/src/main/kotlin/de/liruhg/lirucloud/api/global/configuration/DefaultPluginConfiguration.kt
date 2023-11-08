@@ -2,7 +2,7 @@ package de.liruhg.lirucloud.api.global.configuration
 
 import de.liruhg.lirucloud.api.global.runtime.RuntimeVars
 import de.liruhg.lirucloud.library.configuration.Configuration
-import de.liruhg.lirucloud.library.proxy.PluginConfigurationModel
+import de.liruhg.lirucloud.library.process.model.PluginConfigurationModel
 import de.liruhg.lirucloud.library.util.FileUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,5 +27,7 @@ class DefaultPluginConfiguration(
         )
 
         this.runtimeVars.pluginConfiguration = pluginConfiguration
+
+        this.logger.info("Using cloud configuration with Name: [${this.runtimeVars.pluginConfiguration.processInformation.name}] - UUID: [${this.runtimeVars.pluginConfiguration.processInformation.uuid}]")
     }
 }

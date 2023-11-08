@@ -14,7 +14,7 @@ import de.liruhg.lirucloud.library.router.Router
 import de.liruhg.lirucloud.library.thread.ThreadPool
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInClientRequestHandshake
-import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInClientRequestServers
+import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInClientRequestProcesses
 import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInClientUpdateLoadStatus
 import de.liruhg.lirucloud.master.client.protocol.out.PacketOutClientHandshakeResult
 import de.liruhg.lirucloud.master.command.ListGroupsCommand
@@ -31,14 +31,14 @@ import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
 import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
 import de.liruhg.lirucloud.master.network.NetworkServer
 import de.liruhg.lirucloud.master.process.protocol.`in`.PacketInProcessRequestHandshake
+import de.liruhg.lirucloud.master.process.protocol.`in`.PacketInProxyRegisteredServer
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessHandshakeResult
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessUpdateStatus
-import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProxyProcess
-import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestServerProcess
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProxyRegisterServer
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProcess
 import de.liruhg.lirucloud.master.process.proxy.handler.ProxyProcessRequestHandler
-import de.liruhg.lirucloud.master.process.proxy.registry.ProxyProcessRegistry
+import de.liruhg.lirucloud.master.process.registry.ProcessRegistry
 import de.liruhg.lirucloud.master.process.server.handler.ServerProcessRequestHandler
-import de.liruhg.lirucloud.master.process.server.registry.ServerProcessRegistry
 import de.liruhg.lirucloud.master.runtime.RuntimeVars
 import de.liruhg.lirucloud.master.task.CheckDanglingConnectionsTask
 import de.liruhg.lirucloud.master.web.WebServer
@@ -147,8 +147,8 @@ class LiruCloudMaster {
                     PacketInClientRequestHandshake::class.java
                 )
                 packetRegistry.registerIncomingPacket(
-                    PacketId.PACKET_REQUEST_SERVERS,
-                    PacketInClientRequestServers::class.java
+                    PacketId.PACKET_REQUEST_PROCESSES,
+                    PacketInClientRequestProcesses::class.java
                 )
                 packetRegistry.registerIncomingPacket(
                     PacketId.PACKET_UPDATE_LOAD_STATUS,
@@ -158,18 +158,18 @@ class LiruCloudMaster {
                     PacketId.PACKET_PROCESS_REQUEST_HANDSHAKE,
                     PacketInProcessRequestHandshake::class.java
                 )
+                packetRegistry.registerIncomingPacket(
+                    PacketId.PACKET_PROXY_REGISTERED_SERVER,
+                    PacketInProxyRegisteredServer::class.java
+                )
 
                 packetRegistry.registerOutgoingPacket(
                     PacketId.PACKET_CLIENT_HANDSHAKE_RESULT,
                     PacketOutClientHandshakeResult::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_REQUEST_PROXY_PROCESS,
-                    PacketOutRequestProxyProcess::class.java
-                )
-                packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_REQUEST_SERVER_PROCESS,
-                    PacketOutRequestServerProcess::class.java
+                    PacketId.PACKET_REQUEST_PROCESS,
+                    PacketOutRequestProcess::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
                     PacketId.PACKET_PROCESS_HANDSHAKE_RESULT,
@@ -178,6 +178,10 @@ class LiruCloudMaster {
                 packetRegistry.registerOutgoingPacket(
                     PacketId.PACKET_PROCESS_UPDATE_STATUS,
                     PacketOutProcessUpdateStatus::class.java
+                )
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_PROXY_REGISTER_SERVER,
+                    PacketOutProxyRegisterServer::class.java
                 )
 
                 packetRegistry
@@ -188,16 +192,15 @@ class LiruCloudMaster {
             bindSingleton {
                 val router = Router()
 
-                router.registerRoute("/status", StatusRoute(instance(), instance(), instance(), instance()))
+                router.registerRoute("/status", StatusRoute(instance(), instance(), instance()))
                 router.registerRoute("/user/create", CreateUserRoute(instance(), instance()))
 
                 router
             }
 
-            bindSingleton { ProxyProcessRegistry() }
-            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance()) }
+            bindSingleton { ProcessRegistry() }
 
-            bindSingleton { ServerProcessRegistry() }
+            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance()) }
             bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance()) }
 
             bindSingleton { NetworkServer(instance(), instance(), instance()) }
@@ -223,8 +226,8 @@ class LiruCloudMaster {
         val timer = Timer("lirucloud-timer")
         timer.scheduleAtFixedRate(
             CheckDanglingConnectionsTask(),
-            TimeUnit.SECONDS.toMillis(5),
-            TimeUnit.SECONDS.toMillis(5)
+            TimeUnit.SECONDS.toMillis(15),
+            TimeUnit.SECONDS.toMillis(15)
         )
     }
 }

@@ -1,4 +1,4 @@
-package de.liruhg.lirucloud.library.proxy
+package de.liruhg.lirucloud.library.process.model
 
 import de.liruhg.lirucloud.library.configuration.model.DatabaseConnectionModel
 

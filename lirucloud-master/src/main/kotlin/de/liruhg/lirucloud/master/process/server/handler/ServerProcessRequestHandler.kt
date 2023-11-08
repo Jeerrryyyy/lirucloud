@@ -2,25 +2,25 @@ package de.liruhg.lirucloud.master.process.server.handler
 
 import de.liruhg.lirucloud.library.network.client.model.ClientInfoModel
 import de.liruhg.lirucloud.library.network.util.NetworkUtil
+import de.liruhg.lirucloud.library.process.CloudProcess
 import de.liruhg.lirucloud.library.process.ProcessStage
 import de.liruhg.lirucloud.library.process.ProcessType
-import de.liruhg.lirucloud.library.process.model.ServerProcess
 import de.liruhg.lirucloud.library.util.PortUtils
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
-import de.liruhg.lirucloud.master.process.ProcessRequestHandler
-import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestServerProcess
-import de.liruhg.lirucloud.master.process.server.registry.ServerProcessRegistry
+import de.liruhg.lirucloud.master.process.handler.ProcessRequestHandler
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProcess
+import de.liruhg.lirucloud.master.process.registry.ProcessRegistry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 
 class ServerProcessRequestHandler(
     private val networkUtil: NetworkUtil,
-    private val serverProcessRegistry: ServerProcessRegistry,
     private val clientRegistry: ClientRegistry,
-    private val serverGroupHandler: ServerGroupHandler
-) : ProcessRequestHandler<ServerProcess> {
+    private val serverGroupHandler: ServerGroupHandler,
+    private val processRegistry: ProcessRegistry
+) : ProcessRequestHandler {
 
     private val logger: Logger = LoggerFactory.getLogger(ServerProcessRequestHandler::class.java)
 
@@ -31,7 +31,7 @@ class ServerProcessRequestHandler(
             .toSet()
 
         for (group in responsibleGroups) {
-            val currentlyRunning = this.serverProcessRegistry.getRunningProcessCount(group.name)
+            val currentlyRunning = this.processRegistry.getRunningProcessCount(group.name)
             val clientName = "${clientInfoModel.name}${clientInfoModel.delimiter}${clientInfoModel.suffix}"
             val channel = clientInfoModel.channel
 
@@ -56,7 +56,7 @@ class ServerProcessRequestHandler(
                 }
 
                 this.requestProcesses(
-                    count, ServerProcess(
+                    count, CloudProcess(
                         groupName = group.name,
                         name = null,
                         uuid = null,
@@ -85,7 +85,7 @@ class ServerProcessRequestHandler(
                 }
 
                 this.requestProcess(
-                    ServerProcess(
+                    CloudProcess(
                         groupName = group.name,
                         name = null,
                         uuid = null,
@@ -103,18 +103,21 @@ class ServerProcessRequestHandler(
         }
     }
 
-    override fun requestProcesses(count: Int, process: ServerProcess) {
+    override fun requestProcesses(count: Int, process: CloudProcess) {
         (1..count).forEach { _ ->
             this.requestProcess(process)
         }
     }
 
-    override fun requestProcess(process: ServerProcess) {
+    override fun requestProcess(process: CloudProcess) {
         val groupName = process.groupName
-        val currentlyRunning = this.serverProcessRegistry.getRunningProcessCount(groupName)
+        val currentlyRunning = this.processRegistry.getRunningProcessCount(groupName)
 
         process.uuid = UUID.randomUUID().toString()
+
         process.port = PortUtils.getNextFreePort(60000)
+        PortUtils.blockPort(process.port)
+
         process.name =
             "$groupName-${if ((currentlyRunning + 1) >= 10) "${currentlyRunning + 1}" else "0${currentlyRunning + 1}"}"
 
@@ -133,12 +136,12 @@ class ServerProcessRequestHandler(
             return
         }
 
-        this.networkUtil.sendPacket(PacketOutRequestServerProcess(process), channel)
+        this.networkUtil.sendPacket(PacketOutRequestProcess(process), channel)
 
         clientInfoModel.runningProcesses.add(process.uuid!!)
 
         this.clientRegistry.updateClient(clientInfoModel)
-        this.serverProcessRegistry.registerDanglingProcess(process)
+        this.processRegistry.addProcess(process)
         this.logger.info("Requested process with name: [${process.name}] on client with Name: [${clientName}]")
     }
 }

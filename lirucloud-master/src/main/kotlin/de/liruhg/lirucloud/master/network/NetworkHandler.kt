@@ -1,11 +1,9 @@
 package de.liruhg.lirucloud.master.network
 
 import de.liruhg.lirucloud.library.network.protocol.Packet
-import de.liruhg.lirucloud.library.process.model.ProxyProcess
-import de.liruhg.lirucloud.library.process.model.ServerProcess
 import de.liruhg.lirucloud.master.LiruCloudMaster
 import de.liruhg.lirucloud.master.client.ClientRegistry
-import de.liruhg.lirucloud.master.process.ProcessRegistry
+import de.liruhg.lirucloud.master.process.registry.ProcessRegistry
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import org.kodein.di.instance
@@ -17,8 +15,7 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
     private val logger: Logger = LoggerFactory.getLogger(NetworkHandler::class.java)
 
     private val clientRegistry: ClientRegistry by LiruCloudMaster.KODEIN.instance()
-    private val proxyProcessRegistry: ProcessRegistry<ProxyProcess> by LiruCloudMaster.KODEIN.instance()
-    private val serverProcessRegistry: ProcessRegistry<ServerProcess> by LiruCloudMaster.KODEIN.instance()
+    private val processRegistry: ProcessRegistry by LiruCloudMaster.KODEIN.instance()
     private val networkConnectionRegistry: NetworkConnectionRegistry by LiruCloudMaster.KODEIN.instance()
 
     override fun channelRead0(channelHandlerContext: ChannelHandlerContext, packet: Packet) {
@@ -31,7 +28,7 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
                 channelHandlerContext.channel().id()
             }] connected. Awaiting handshake."
         )
-        this.networkConnectionRegistry.registerDanglingConnection(channelHandlerContext.channel())
+        this.networkConnectionRegistry.registerDanglingConnection(channelHandlerContext.channel().id(), channelHandlerContext.channel())
     }
 
     override fun channelInactive(channelHandlerContext: ChannelHandlerContext) {
@@ -50,33 +47,18 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
             )
         }
 
-        val proxyProcess = this.proxyProcessRegistry.getProcessByChannel(channel)
+        val process = this.processRegistry.getProcessByChannel(channel)
 
-        if (proxyProcess != null) {
-            clientInfoModel = this.clientRegistry.getClient(proxyProcess)
-            clientInfoModel?.runningProcesses?.remove(proxyProcess.uuid)
+        if (process != null) {
+            clientInfoModel = this.clientRegistry.getClient(process)
+            clientInfoModel?.runningProcesses?.remove(process.uuid)
 
-            this.proxyProcessRegistry.unregisterProcess(proxyProcess)
-
-            this.logger.info(
-                "Channel with Id: [${
-                    channel.id()
-                }] disconnected. Removing proxy process with Id: [${proxyProcess.uuid}] - Name: [${proxyProcess.name}]"
-            )
-        }
-
-        val serverProcess = this.serverProcessRegistry.getProcessByChannel(channel)
-
-        if (serverProcess != null) {
-            clientInfoModel = this.clientRegistry.getClient(serverProcess)
-            clientInfoModel?.runningProcesses?.remove(serverProcess.uuid)
-
-            this.serverProcessRegistry.unregisterProcess(serverProcess)
+            this.processRegistry.removeProcess(process)
 
             this.logger.info(
                 "Channel with Id: [${
                     channel.id()
-                }] disconnected. Removing server process with Id: [${serverProcess.uuid}] - Name: [${serverProcess.name}]"
+                }] disconnected. Removing proxy process with Id: [${process.uuid}] - Name: [${process.name}]"
             )
         }
     }

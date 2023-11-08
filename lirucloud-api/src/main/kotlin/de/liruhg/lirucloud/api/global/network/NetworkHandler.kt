@@ -23,7 +23,7 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
     }
 
     override fun channelActive(channelHandlerContext: ChannelHandlerContext) {
-        this.logger.info("Channel activated, trying to handshake...")
+        this.logger.info("Channel activated, trying to handshake... with UUID: [${this.runtimeVars.pluginConfiguration.processInformation.uuid}]")
 
         this.networkUtil.sendPacket(
             PacketOutProcessRequestHandshake(
