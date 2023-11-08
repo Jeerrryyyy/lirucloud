@@ -1,6 +1,12 @@
 package de.liruhg.lirucloud.master.group.proxy
 
 import com.mongodb.client.model.Filters
+import de.liruhg.lirucloud.library.cache.CacheConnectionFactory
+import de.liruhg.lirucloud.library.cache.CachePrefix
+import de.liruhg.lirucloud.library.cache.extension.deleteEntity
+import de.liruhg.lirucloud.library.cache.extension.getAllEntities
+import de.liruhg.lirucloud.library.cache.extension.getEntity
+import de.liruhg.lirucloud.library.cache.extension.insertEntity
 import de.liruhg.lirucloud.library.database.DatabaseConnectionFactory
 import de.liruhg.lirucloud.library.database.extension.deleteEntity
 import de.liruhg.lirucloud.library.database.extension.getAllEntities
@@ -19,8 +25,9 @@ import java.nio.file.Path
 
 class ProxyGroupHandler(
     private val fileHandler: FileHandler,
-    private val databaseConnectionFactory: DatabaseConnectionFactory
-) : GroupHandler<ProxyGroupModel>() {
+    private val databaseConnectionFactory: DatabaseConnectionFactory,
+    private val cacheConnectionFactory: CacheConnectionFactory
+) : GroupHandler<ProxyGroupModel> {
 
     private val logger: Logger = LoggerFactory.getLogger(ProxyGroupHandler::class.java)
 
@@ -90,5 +97,37 @@ class ProxyGroupHandler(
 
     override fun fetchGroups(): Set<ProxyGroupModel> {
         return this.databaseConnectionFactory.proxyGroupsCollection.getAllEntities<ProxyGroupModel>().toSet()
+    }
+
+    override fun fetchGroup(name: String): ProxyGroupModel? {
+        return this.databaseConnectionFactory.proxyGroupsCollection.getEntity(Filters.eq("name", name))
+    }
+
+    override fun registerGroup(group: ProxyGroupModel) {
+        this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.PROXY_GROUP, group.name, group)
+    }
+
+    override fun unregisterGroup(group: ProxyGroupModel) {
+        this.cacheConnectionFactory.jedisPooled.deleteEntity(CachePrefix.PROXY_GROUP, group.name)
+    }
+
+    override fun getGroup(name: String): ProxyGroupModel? {
+        return this.cacheConnectionFactory.jedisPooled.getEntity(CachePrefix.PROXY_GROUP, name)
+    }
+
+    override fun getGroups(): List<ProxyGroupModel> {
+        return this.cacheConnectionFactory.jedisPooled.getAllEntities("${CachePrefix.PROXY_GROUP.prefix}:*")
+    }
+
+    override fun updateGroup(name: String) {
+        val group = this.fetchGroup(name) ?: return
+
+        this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.PROXY_GROUP, name, group)
+    }
+
+    override fun updateGroups() {
+        this.fetchGroups().forEach {
+            this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.PROXY_GROUP, it.name, it)
+        }
     }
 }

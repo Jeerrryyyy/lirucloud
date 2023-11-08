@@ -16,9 +16,9 @@ import java.io.File
 import java.nio.file.Path
 
 @CommandInformation(
-    command = "update",
-    description = "This command will update the group files in the bucket! Usage: update <group> (if no group is specified, all groups will be updated)",
-    aliases = ["u", "updategroupfiles", "updatefiles", "updategroup", "updategroups"]
+    command = "updatefiles",
+    description = "This command will update the group files in the bucket! Usage: updatefiles <group> (if no group is specified, all groups will be updated)",
+    aliases = ["updategroupfiles", "updategroup", "updategroups"]
 )
 class UpdateGroupFiles(
     private val proxyGroupHandler: ProxyGroupHandler,
@@ -31,25 +31,25 @@ class UpdateGroupFiles(
     override fun execute(args: Array<String>): Boolean {
         when (args.size) {
             1 -> {
-                this.proxyGroupHandler.groups.forEach { (_, group) ->
-                    this.updateProxyGroup(group)
+                this.proxyGroupHandler.getGroups().forEach {
+                    this.updateProxyGroup(it)
                 }
 
-                this.serverGroupHandler.groups.forEach { (_, group) ->
-                    this.updateServerGroup(group)
+                this.serverGroupHandler.getGroups().forEach {
+                    this.updateServerGroup(it)
                 }
             }
 
             2 -> {
                 val group = args[1]
 
-                if (this.proxyGroupHandler.groups.containsKey(group)) {
-                    this.updateProxyGroup(this.proxyGroupHandler.groups[group]!!)
+                if (this.proxyGroupHandler.groupExists(group)) {
+                    this.updateProxyGroup(this.proxyGroupHandler.getGroup(group)!!)
                     return true
                 }
 
-                if (this.serverGroupHandler.groups.containsKey(group)) {
-                    this.updateServerGroup(this.serverGroupHandler.groups[group]!!)
+                if (this.serverGroupHandler.groupExists(group)) {
+                    this.updateServerGroup(this.serverGroupHandler.getGroup(group)!!)
                     return true
                 }
 
@@ -57,7 +57,7 @@ class UpdateGroupFiles(
             }
 
             else -> {
-                this.logger.error("Invalid arguments! Usage: update <group> (if no group is specified, all groups will be updated)")
+                this.logger.error("Invalid arguments! Usage: updatefiles <group> (if no group is specified, all groups will be updated)")
             }
         }
 

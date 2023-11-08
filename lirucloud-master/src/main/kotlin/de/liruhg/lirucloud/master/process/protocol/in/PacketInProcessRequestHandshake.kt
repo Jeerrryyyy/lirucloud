@@ -7,11 +7,13 @@ import de.liruhg.lirucloud.library.process.ProcessStage
 import de.liruhg.lirucloud.library.process.ProcessType
 import de.liruhg.lirucloud.master.LiruCloudMaster
 import de.liruhg.lirucloud.master.client.ClientRegistry
+import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
-import de.liruhg.lirucloud.master.process.registry.ProcessRegistry
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessHandshakeResult
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessUpdateStatus
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProxyRegisterServer
+import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutUpdateProxyInformation
+import de.liruhg.lirucloud.master.process.registry.ProcessRegistry
 import de.liruhg.lirucloud.master.runtime.RuntimeVars
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -28,6 +30,7 @@ class PacketInProcessRequestHandshake : Packet {
     private val networkUtil: NetworkUtil by LiruCloudMaster.KODEIN.instance()
     private val runtimeVars: RuntimeVars by LiruCloudMaster.KODEIN.instance()
     private val networkConnectionRegistry: NetworkConnectionRegistry by LiruCloudMaster.KODEIN.instance()
+    private val proxyGroupHandler: ProxyGroupHandler by LiruCloudMaster.KODEIN.instance()
 
     private lateinit var uuid: String
     private lateinit var clientKey: String
@@ -66,13 +69,15 @@ class PacketInProcessRequestHandshake : Packet {
     }
 
     private fun handleProcess(process: CloudProcess, channel: Channel) {
-        process.channel = channel
+        this.processRegistry.addChannel(process.uuid!!, channel)
 
         this.networkConnectionRegistry.unregisterDanglingConnection(channel.id())
 
         when (process.type) {
             ProcessType.PROXY -> {
                 process.stage = ProcessStage.RUNNING
+
+                this.processRegistry.updateProcess(process)
 
                 val clientInfoModel = this.clientRegistry.getClient(process)
 
@@ -87,10 +92,36 @@ class PacketInProcessRequestHandshake : Packet {
                     PacketOutProcessUpdateStatus(process.uuid!!, process.stage),
                     clientInfoModel.channel!!
                 )
+
+                val proxyGroup = this.proxyGroupHandler.getGroup(process.groupName)
+
+                if (proxyGroup == null) {
+                    this.logger.error("Could not find any proxy group with name: [${process.groupName}]")
+                    return
+                }
+
+                val proxyChannel = this.processRegistry.getChannel(process.uuid!!)
+
+                if (proxyChannel == null) {
+                    this.logger.error("Could not find any channel for proxy with UUID: [${process.uuid}]")
+                    return
+                }
+
+                this.networkUtil.sendPacket(
+                    PacketOutUpdateProxyInformation(proxyGroup.proxyInformation),
+                    proxyChannel
+                )
             }
 
             ProcessType.SERVER -> {
-                this.processRegistry.processes.values.filter { it.type == ProcessType.PROXY }.forEach { proxyProcess ->
+                for (proxyProcess in this.processRegistry.getProcesses().filter { it.type == ProcessType.PROXY }) {
+                    val proxyChannel = this.processRegistry.getChannel(proxyProcess.uuid!!)
+
+                    if (proxyChannel == null) {
+                        this.logger.error("Could not find any channel for proxy with UUID: [${proxyProcess.uuid}]")
+                        continue
+                    }
+
                     this.networkUtil.sendPacket(
                         PacketOutProxyRegisterServer(
                             process.uuid!!,
@@ -99,7 +130,7 @@ class PacketInProcessRequestHandshake : Packet {
                             process.ip,
                             process.port
                         ),
-                        proxyProcess.channel!!
+                        proxyChannel
                     )
                 }
             }

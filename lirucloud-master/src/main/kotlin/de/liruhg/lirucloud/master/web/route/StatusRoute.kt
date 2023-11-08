@@ -53,7 +53,7 @@ class StatusRoute(
 
         val proxyProcesses = JsonArray()
 
-        this.processRegistry.processes.values.filter { it.type == ProcessType.PROXY }.forEach { process ->
+        this.processRegistry.getProcesses().filter { it.type == ProcessType.PROXY }.forEach { process ->
             val proxyProcess = JsonObject()
 
             proxyProcess.addProperty("name", process.name)
@@ -75,7 +75,7 @@ class StatusRoute(
 
         val serverProcesses = JsonArray()
 
-        this.processRegistry.processes.values.filter { it.type == ProcessType.SERVER }.forEach { process ->
+        this.processRegistry.getProcesses().filter { it.type == ProcessType.SERVER }.forEach { process ->
             val serverProcess = JsonObject()
 
             serverProcess.addProperty("name", process.name)

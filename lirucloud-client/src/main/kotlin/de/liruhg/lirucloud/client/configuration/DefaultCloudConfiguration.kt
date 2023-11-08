@@ -3,6 +3,7 @@ package de.liruhg.lirucloud.client.configuration
 import de.liruhg.lirucloud.client.configuration.model.CloudConfigurationModel
 import de.liruhg.lirucloud.client.runtime.RuntimeVars
 import de.liruhg.lirucloud.library.configuration.Configuration
+import de.liruhg.lirucloud.library.configuration.model.CacheConnectionModel
 import de.liruhg.lirucloud.library.configuration.model.DatabaseConnectionModel
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.util.FileUtils
@@ -40,6 +41,13 @@ class DefaultCloudConfiguration(
                     collections = mutableMapOf(
                         "filesCollection" to "filesCollection"
                     )
+                ),
+                cache = CacheConnectionModel(
+                    host = "localhost",
+                    port = 6379,
+                    user = "",
+                    password = "",
+                    database = 0
                 )
             )
 

@@ -31,6 +31,8 @@ class PacketInProxyRegisteredServer : Packet {
 
         process.stage = ProcessStage.RUNNING
 
+        this.processRegistry.updateProcess(process)
+
         val clientInfoModel = this.clientRegistry.getClient(process)
 
         if (clientInfoModel == null) {

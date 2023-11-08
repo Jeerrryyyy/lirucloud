@@ -1,7 +1,5 @@
 package de.liruhg.lirucloud.library.process
 
-import io.netty.channel.Channel
-
 class CloudProcess(
     val groupName: String,
     var name: String?,
@@ -13,6 +11,5 @@ class CloudProcess(
     val minMemory: Int,
     val maxMemory: Int,
     var port: Int,
-    val maxPlayers: Int,
-    var channel: Channel? = null
+    val maxPlayers: Int
 )

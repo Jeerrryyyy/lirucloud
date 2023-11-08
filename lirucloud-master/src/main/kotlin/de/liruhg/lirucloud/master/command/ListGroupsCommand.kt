@@ -27,26 +27,26 @@ class ListGroupsCommand(
         when (args.size) {
             1 -> {
                 this.logger.info("Proxy Groups:")
-                this.proxyGroupHandler.groups.forEach { (_, group) ->
-                    this.printProxyGroup(group)
+                this.proxyGroupHandler.getGroups().forEach {
+                    this.printProxyGroup(it)
                 }
 
                 this.logger.info("Server Groups:")
-                this.serverGroupHandler.groups.forEach { (_, group) ->
-                    this.printServerGroup(group)
+                this.serverGroupHandler.getGroups().forEach {
+                    this.printServerGroup(it)
                 }
             }
 
             2 -> {
                 val group = args[1]
 
-                if (this.proxyGroupHandler.groups.containsKey(group)) {
-                    this.printProxyGroup(this.proxyGroupHandler.groups[group]!!)
+                if (this.proxyGroupHandler.groupExists(group)) {
+                    this.printProxyGroup(this.proxyGroupHandler.getGroup(group)!!)
                     return true
                 }
 
-                if (this.serverGroupHandler.groups.containsKey(group)) {
-                    this.printServerGroup(this.serverGroupHandler.groups[group]!!)
+                if (this.serverGroupHandler.groupExists(group)) {
+                    this.printServerGroup(this.serverGroupHandler.getGroup(group)!!)
                     return true
                 }
 
@@ -63,14 +63,14 @@ class ListGroupsCommand(
     private fun printProxyGroup(proxyGroupModel: ProxyGroupModel) {
         val templatePath = Path.of("${Directories.MASTER_TEMPLATE_PROXY}/${proxyGroupModel.name}")
 
-        this.logger.info("Group Name: [${proxyGroupModel.name}] - MaxServersOnline: [${proxyGroupModel.maxServersOnline}] - MinServersOnline: [${proxyGroupModel.minServersOnline}] - MaxMemory: [${proxyGroupModel.maxMemory}] - MinMemory: [${proxyGroupModel.minMemory}] - MaxPlayers: [${proxyGroupModel.maxPlayers}] - JoinPower: [${proxyGroupModel.joinPower}] - Maintenance: [${proxyGroupModel.maintenance}] - Path: [${templatePath.toAbsolutePath()}]")
+        this.logger.info("Group Name: [${proxyGroupModel.name}] - MinServersOnline: [${proxyGroupModel.minServersOnline}] - MaxMemory: [${proxyGroupModel.maxMemory}] - MinMemory: [${proxyGroupModel.minMemory}] - MaxPlayers: [${proxyGroupModel.maxPlayers}] - JoinPower: [${proxyGroupModel.proxyInformation.joinPower}] - Maintenance: [${proxyGroupModel.proxyInformation.maintenance}] - Path: [${templatePath.toAbsolutePath()}]")
     }
 
     private fun printServerGroup(serverGroupModel: ServerGroupModel) {
         val templatePath = Path.of("${Directories.MASTER_TEMPLATE_SERVER}/${serverGroupModel.name}")
 
         this.logger.info(
-            "Group Name: [${serverGroupModel.name}] - MaxServersOnline: [${serverGroupModel.maxServersOnline}] - MinServersOnline: [${serverGroupModel.minServersOnline}] - MaxMemory: [${serverGroupModel.maxMemory}] - MinMemory: [${serverGroupModel.minMemory}] - MaxPlayers: [${serverGroupModel.maxPlayers}] - JoinPower: [${serverGroupModel.joinPower}] - Maintenance: [${serverGroupModel.maintenance}] - Template: [${serverGroupModel.template}] - NewServerPercentage: [${serverGroupModel.newServerPercentage}] - ServerMode: [${serverGroupModel.mode}] - RandomTemplateMode: [${serverGroupModel.randomTemplateMode}] - TemplateModes: [${
+            "Group Name: [${serverGroupModel.name}] - MinServersOnline: [${serverGroupModel.minServersOnline}] - MaxMemory: [${serverGroupModel.maxMemory}] - MinMemory: [${serverGroupModel.minMemory}] - MaxPlayers: [${serverGroupModel.maxPlayers}] - JoinPower: [${serverGroupModel.serverInformation.joinPower}] - Maintenance: [${serverGroupModel.serverInformation.maintenance}] - Template: [${serverGroupModel.template}] - NewServerPercentage: [${serverGroupModel.newServerPercentage}] - ServerMode: [${serverGroupModel.mode}] - RandomTemplateMode: [${serverGroupModel.randomTemplateMode}] - TemplateModes: [${
                 serverGroupModel.templateModes.joinToString(
                     ", "
                 )

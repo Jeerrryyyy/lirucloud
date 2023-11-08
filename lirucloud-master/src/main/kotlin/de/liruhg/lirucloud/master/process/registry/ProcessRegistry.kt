@@ -1,38 +1,76 @@
 package de.liruhg.lirucloud.master.process.registry
 
+import de.liruhg.lirucloud.library.cache.CacheConnectionFactory
+import de.liruhg.lirucloud.library.cache.CachePrefix
+import de.liruhg.lirucloud.library.cache.extension.*
 import de.liruhg.lirucloud.library.process.CloudProcess
 import io.netty.channel.Channel
-import java.util.concurrent.ConcurrentHashMap
 
-class ProcessRegistry {
+class ProcessRegistry(
+    private val cacheConnectionFactory: CacheConnectionFactory
+) {
 
-    val processes: ConcurrentHashMap<String, CloudProcess> = ConcurrentHashMap()
+    private val channels: MutableMap<String, Channel> = mutableMapOf()
 
     fun addProcess(process: CloudProcess) {
-        this.processes[process.uuid!!] = process
+        this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.PROCESS, process.uuid!!, process)
     }
 
     fun removeProcess(process: CloudProcess) {
-        this.processes.remove(process.uuid)
+        this.removeChannel(process.uuid!!)
+        this.cacheConnectionFactory.jedisPooled.deleteEntity(CachePrefix.PROCESS, process.uuid!!)
+    }
+
+    fun updateProcess(process: CloudProcess) {
+        this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.PROCESS, process.uuid!!, process)
     }
 
     fun containsProcess(uuid: String): Boolean {
-        return this.processes.containsKey(uuid)
+        return this.cacheConnectionFactory.jedisPooled.existsEntity(CachePrefix.PROCESS, uuid)
     }
 
     fun getProcess(uuid: String): CloudProcess? {
-        return this.processes.getOrDefault(uuid, null)
+        return this.cacheConnectionFactory.jedisPooled.getEntity(CachePrefix.PROCESS, uuid)
     }
 
-    fun getRunningProcessCount(name: String): Int {
-        return this.processes.values.count { it.groupName == name }
+    fun getRunningProcessCount(groupName: String): Int {
+        return this.cacheConnectionFactory.jedisPooled.getAllEntities<CloudProcess>("${CachePrefix.PROCESS.prefix}:*")
+            .count { it.groupName == groupName }
     }
 
     fun getRunningProcessCount(): Int {
-        return this.processes.size
+        return this.cacheConnectionFactory.jedisPooled.getAllEntities<CloudProcess>("${CachePrefix.PROCESS.prefix}:*")
+            .count()
     }
 
     fun getProcessByChannel(channel: Channel): CloudProcess? {
-        return processes.values.firstOrNull { it.channel == channel }
+        val uuid = this.channels.filter { it.value == channel }.keys.firstOrNull() ?: return null
+
+        return this.cacheConnectionFactory.jedisPooled.getEntity<CloudProcess>(CachePrefix.PROCESS, uuid)
+    }
+
+    fun getProcesses(): List<CloudProcess> {
+        return this.cacheConnectionFactory.jedisPooled.getAllEntities<CloudProcess>("${CachePrefix.PROCESS.prefix}:*")
+    }
+
+    fun getProcesses(groupName: String): List<CloudProcess> {
+        return this.cacheConnectionFactory.jedisPooled.getAllEntities<CloudProcess>("${CachePrefix.PROCESS.prefix}:*")
+            .filter { it.groupName == groupName }
+    }
+
+    fun addChannel(uuid: String, channel: Channel) {
+        this.channels[uuid] = channel
+    }
+
+    fun removeChannel(uuid: String) {
+        this.channels.remove(uuid)
+    }
+
+    fun updateChannel(uuid: String, channel: Channel) {
+        this.channels[uuid] = channel
+    }
+
+    fun getChannel(uuid: String): Channel? {
+        return this.channels[uuid]
     }
 }

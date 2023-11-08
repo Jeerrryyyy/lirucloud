@@ -1,5 +1,6 @@
 package de.liruhg.lirucloud.client.configuration.model
 
+import de.liruhg.lirucloud.library.configuration.model.CacheConnectionModel
 import de.liruhg.lirucloud.library.configuration.model.DatabaseConnectionModel
 
 data class CloudConfigurationModel(
@@ -13,4 +14,5 @@ data class CloudConfigurationModel(
     val uuid: String,
     val responsibleGroups: Set<String>,
     val database: DatabaseConnectionModel,
+    val cache: CacheConnectionModel,
 )

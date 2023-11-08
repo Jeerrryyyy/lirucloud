@@ -1,6 +1,7 @@
 package de.liruhg.lirucloud.master.configuration
 
 import de.liruhg.lirucloud.library.configuration.Configuration
+import de.liruhg.lirucloud.library.configuration.model.CacheConnectionModel
 import de.liruhg.lirucloud.library.configuration.model.DatabaseConnectionModel
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.util.FileUtils
@@ -36,6 +37,13 @@ class DefaultCloudConfiguration(
                         "proxyGroupsCollection" to "proxyGroupsCollection",
                         "serverGroupsCollection" to "serverGroupsCollection"
                     )
+                ),
+                cache = CacheConnectionModel(
+                    host = "localhost",
+                    port = 6379,
+                    user = "",
+                    password = "",
+                    database = 0
                 ),
                 validClients = setOf(
                     ValidClientModel("Client-1", setOf("localhost", "127.0.0.1", "0:0:0:0:0:0:0:1"))

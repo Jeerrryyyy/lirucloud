@@ -35,6 +35,6 @@ class PacketInProcessUpdateStatus : Packet {
 
         this.processRegistry.updateProcess(internalCloudProcess)
 
-        this.logger.info("Updated process with UUID: [${this.uuid}] - ProcessStage: [${this.stage}]")
+        this.logger.info("Updated process with Name: [${internalCloudProcess.name}] - UUID: [${this.uuid}] - ProcessStage: [${this.stage}]")
     }
 }

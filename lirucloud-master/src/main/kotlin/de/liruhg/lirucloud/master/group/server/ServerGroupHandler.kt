@@ -1,6 +1,12 @@
 package de.liruhg.lirucloud.master.group.server
 
 import com.mongodb.client.model.Filters
+import de.liruhg.lirucloud.library.cache.CacheConnectionFactory
+import de.liruhg.lirucloud.library.cache.CachePrefix
+import de.liruhg.lirucloud.library.cache.extension.deleteEntity
+import de.liruhg.lirucloud.library.cache.extension.getAllEntities
+import de.liruhg.lirucloud.library.cache.extension.getEntity
+import de.liruhg.lirucloud.library.cache.extension.insertEntity
 import de.liruhg.lirucloud.library.database.DatabaseConnectionFactory
 import de.liruhg.lirucloud.library.database.extension.deleteEntity
 import de.liruhg.lirucloud.library.database.extension.getAllEntities
@@ -19,8 +25,9 @@ import java.nio.file.Path
 
 class ServerGroupHandler(
     private val fileHandler: FileHandler,
-    private val databaseConnectionFactory: DatabaseConnectionFactory
-) : GroupHandler<ServerGroupModel>() {
+    private val databaseConnectionFactory: DatabaseConnectionFactory,
+    private val cacheConnectionFactory: CacheConnectionFactory
+) : GroupHandler<ServerGroupModel> {
 
     private val logger: Logger = LoggerFactory.getLogger(ServerGroupHandler::class.java)
 
@@ -92,5 +99,38 @@ class ServerGroupHandler(
 
     override fun fetchGroups(): Set<ServerGroupModel> {
         return this.databaseConnectionFactory.serverGroupsCollection.getAllEntities<ServerGroupModel>().toSet()
+    }
+
+    override fun fetchGroup(name: String): ServerGroupModel? {
+        return this.databaseConnectionFactory.serverGroupsCollection.getEntity(Filters.eq("name", name))
+    }
+
+    override fun registerGroup(group: ServerGroupModel) {
+        this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.SERVER_GROUP, group.name, group)
+    }
+
+    override fun unregisterGroup(group: ServerGroupModel) {
+        this.cacheConnectionFactory.jedisPooled.deleteEntity(CachePrefix.SERVER_GROUP, group.name)
+    }
+
+    override fun getGroup(name: String): ServerGroupModel? {
+        return this.cacheConnectionFactory.jedisPooled.getEntity(CachePrefix.SERVER_GROUP, name)
+    }
+
+    override fun getGroups(): List<ServerGroupModel> {
+        return this.cacheConnectionFactory.jedisPooled.getAllEntities("${CachePrefix.SERVER_GROUP.prefix}:*")
+    }
+
+    override fun updateGroup(name: String) {
+        val group = this.fetchGroup(name) ?: return
+
+        this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.SERVER_GROUP, name, group)
+
+    }
+
+    override fun updateGroups() {
+        this.fetchGroups().forEach {
+            this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.SERVER_GROUP, it.name, it)
+        }
     }
 }

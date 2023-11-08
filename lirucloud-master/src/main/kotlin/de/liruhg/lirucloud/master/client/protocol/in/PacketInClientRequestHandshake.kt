@@ -62,6 +62,8 @@ class PacketInClientRequestHandshake : Packet {
 
             this.clientInfoModel.responsibleGroups = proxyGroups + serverGroups
 
+            println(this.clientInfoModel.responsibleGroups)
+
             this.logger.warn("Client with Name: [$clientName] has no responsible groups assigned. Assigning to all groups!")
         }
 

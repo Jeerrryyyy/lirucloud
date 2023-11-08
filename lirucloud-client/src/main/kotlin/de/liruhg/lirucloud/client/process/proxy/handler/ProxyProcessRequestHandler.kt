@@ -74,6 +74,7 @@ class ProxyProcessRequestHandler(
                     runtimeVars.cloudConfiguration.masterAddress,
                     runtimeVars.cloudConfiguration.masterPort,
                     runtimeVars.cloudConfiguration.database,
+                    runtimeVars.cloudConfiguration.cache,
                     ProcessInformationModel(
                         request.uuid.orEmpty(),
                         request.name.orEmpty()

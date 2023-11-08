@@ -6,7 +6,7 @@ import de.liruhg.lirucloud.library.process.CloudProcess
 import de.liruhg.lirucloud.library.process.ProcessMode
 import de.liruhg.lirucloud.library.process.ProcessStage
 import de.liruhg.lirucloud.library.process.ProcessType
-import de.liruhg.lirucloud.library.util.PortUtils
+import de.liruhg.lirucloud.library.util.PortUtil
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.process.handler.ProcessRequestHandler
@@ -20,7 +20,8 @@ class ProxyProcessRequestHandler(
     private val networkUtil: NetworkUtil,
     private val clientRegistry: ClientRegistry,
     private val proxyGroupHandler: ProxyGroupHandler,
-    private val processRegistry: ProcessRegistry
+    private val processRegistry: ProcessRegistry,
+    private val portUtil: PortUtil
 ) : ProcessRequestHandler {
 
     private val logger: Logger = LoggerFactory.getLogger(ProxyProcessRequestHandler::class.java)
@@ -116,8 +117,8 @@ class ProxyProcessRequestHandler(
 
         process.uuid = UUID.randomUUID().toString()
 
-        process.port = PortUtils.getNextFreePort(25565)
-        PortUtils.blockPort(process.port)
+        process.port = this.portUtil.getNextFreePort(25565)
+        this.portUtil.blockPort(process.port)
 
         process.name =
             "$groupName-${if ((currentlyRunning + 1) >= 10) "${currentlyRunning + 1}" else "0${currentlyRunning + 1}"}"

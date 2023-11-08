@@ -20,6 +20,7 @@ dependencies {
     api(group = "io.jsonwebtoken", name = "jjwt-jackson", version = "0.12.3")
     api(group = "at.favre.lib", name = "bcrypt", version = "0.10.2")
     api(group = "org.yaml", name = "snakeyaml", version = "2.2")
+    api(group = "redis.clients", name = "jedis", version = "5.0.2")
 }
 
 configure<JavaPluginExtension> {

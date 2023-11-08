@@ -1,5 +1,6 @@
 package de.liruhg.lirucloud.master
 
+import de.liruhg.lirucloud.library.cache.CacheConnectionFactory
 import de.liruhg.lirucloud.library.command.CommandManager
 import de.liruhg.lirucloud.library.command.commands.CloudExitCommand
 import de.liruhg.lirucloud.library.command.commands.CloudHelpCommand
@@ -12,6 +13,7 @@ import de.liruhg.lirucloud.library.network.protocol.PacketRegistry
 import de.liruhg.lirucloud.library.network.util.NetworkUtil
 import de.liruhg.lirucloud.library.router.Router
 import de.liruhg.lirucloud.library.thread.ThreadPool
+import de.liruhg.lirucloud.library.util.PortUtil
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInClientRequestHandshake
 import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInClientRequestProcesses
@@ -19,6 +21,7 @@ import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInClientUpdateLoadS
 import de.liruhg.lirucloud.master.client.protocol.out.PacketOutClientHandshakeResult
 import de.liruhg.lirucloud.master.command.ListGroupsCommand
 import de.liruhg.lirucloud.master.command.UpdateGroupFiles
+import de.liruhg.lirucloud.master.command.UpdateGroupInformation
 import de.liruhg.lirucloud.master.configuration.CloudKeysCreator
 import de.liruhg.lirucloud.master.configuration.DefaultCloudConfiguration
 import de.liruhg.lirucloud.master.configuration.DefaultFolderCreator
@@ -37,6 +40,7 @@ import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProcessUpdateSta
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutProxyRegisterServer
 import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProcess
 import de.liruhg.lirucloud.master.process.proxy.handler.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.master.process.proxy.protocol.out.PacketOutUpdateProxyInformation
 import de.liruhg.lirucloud.master.process.registry.ProcessRegistry
 import de.liruhg.lirucloud.master.process.server.handler.ServerProcessRequestHandler
 import de.liruhg.lirucloud.master.runtime.RuntimeVars
@@ -78,6 +82,7 @@ class LiruCloudMaster {
         val runtimeVars = KODEIN.direct.instance<RuntimeVars>()
 
         KODEIN.direct.instance<DatabaseConnectionFactory>().connectDatabase(runtimeVars.cloudConfiguration.database)
+        KODEIN.direct.instance<CacheConnectionFactory>().connectCache(runtimeVars.cloudConfiguration.cache)
 
         KODEIN.direct.instance<ConfigurationExecutor>().executeConfigurations()
         KODEIN.direct.instance<CommandManager>().start()
@@ -105,11 +110,14 @@ class LiruCloudMaster {
             bindSingleton { NetworkUtil() }
 
             bindSingleton { DatabaseConnectionFactory() }
+            bindSingleton { CacheConnectionFactory() }
+
+            bindSingleton { PortUtil(instance()) }
 
             bindSingleton { SyncFileHandler(instance()) }
 
-            bindSingleton { ServerGroupHandler(instance(), instance()) }
-            bindSingleton { ProxyGroupHandler(instance(), instance()) }
+            bindSingleton { ServerGroupHandler(instance(), instance(), instance()) }
+            bindSingleton { ProxyGroupHandler(instance(), instance(), instance()) }
 
             bindSingleton {
                 val configurationExecutor = ConfigurationExecutor()
@@ -134,6 +142,7 @@ class LiruCloudMaster {
                 commandManager.registerCommand(UpdateGroupFiles(instance(), instance(), instance()))
                 commandManager.registerCommand(CloudExitCommand())
                 commandManager.registerCommand(ListGroupsCommand(instance(), instance()))
+                commandManager.registerCommand(UpdateGroupInformation(instance(), instance(), instance(), instance()))
                 commandManager.registerCommand(CloudHelpCommand(commandManager))
 
                 commandManager
@@ -183,6 +192,10 @@ class LiruCloudMaster {
                     PacketId.PACKET_PROXY_REGISTER_SERVER,
                     PacketOutProxyRegisterServer::class.java
                 )
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_UPDATE_PROXY_INFORMATION,
+                    PacketOutUpdateProxyInformation::class.java
+                )
 
                 packetRegistry
             }
@@ -198,10 +211,10 @@ class LiruCloudMaster {
                 router
             }
 
-            bindSingleton { ProcessRegistry() }
+            bindSingleton { ProcessRegistry(instance()) }
 
-            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance()) }
-            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance()) }
+            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
+            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
 
             bindSingleton { NetworkServer(instance(), instance(), instance()) }
             bindSingleton { WebServer(instance(), instance(), instance()) }

@@ -8,7 +8,9 @@ import de.liruhg.lirucloud.api.global.network.NetworkClient
 import de.liruhg.lirucloud.api.global.network.protocol.`in`.PacketInProcessHandshakeResult
 import de.liruhg.lirucloud.api.global.network.protocol.out.PacketOutProcessRequestHandshake
 import de.liruhg.lirucloud.api.global.runtime.RuntimeVars
+import de.liruhg.lirucloud.api.proxy.listener.ProxyPingEventListener
 import de.liruhg.lirucloud.api.proxy.listener.ServerConnectEventListener
+import de.liruhg.lirucloud.api.proxy.network.protocol.`in`.PacketInUpdateProxyInformation
 import de.liruhg.lirucloud.api.proxy.server.ServerRegistry
 import de.liruhg.lirucloud.api.proxy.server.protocol.`in`.PacketInProxyRegisterServer
 import de.liruhg.lirucloud.api.proxy.server.protocol.out.PacketOutProxyRegisteredServer
@@ -115,6 +117,10 @@ class LiruCloudProxyApi : Plugin() {
                     PacketId.PACKET_PROXY_REGISTER_SERVER,
                     PacketInProxyRegisterServer::class.java
                 )
+                packetRegistry.registerIncomingPacket(
+                    PacketId.PACKET_UPDATE_PROXY_INFORMATION,
+                    PacketInUpdateProxyInformation::class.java
+                )
 
                 packetRegistry
             }
@@ -125,5 +131,6 @@ class LiruCloudProxyApi : Plugin() {
 
     private fun registerListeners() {
         this.proxy.pluginManager.registerListener(this, ServerConnectEventListener())
+        this.proxy.pluginManager.registerListener(this, ProxyPingEventListener())
     }
 }
