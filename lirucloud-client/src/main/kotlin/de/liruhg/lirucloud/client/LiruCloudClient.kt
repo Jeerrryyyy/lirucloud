@@ -1,6 +1,16 @@
 package de.liruhg.lirucloud.client
 
+import de.liruhg.lirucloud.client.network.NetworkClient
+import de.liruhg.lirucloud.client.protocol.`in`.PacketInHandshakeResult
+import de.liruhg.lirucloud.client.protocol.out.PacketOutHandshake
+import de.liruhg.lirucloud.library.network.helper.NettyHelper
+import de.liruhg.lirucloud.library.network.protocol.PacketRegistry
+import de.liruhg.lirucloud.library.network.util.NetworkUtil
+import de.liruhg.lirucloud.library.thread.ThreadPool
 import org.kodein.di.DI
+import org.kodein.di.bindSingleton
+import org.kodein.di.direct
+import org.kodein.di.instance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
@@ -20,6 +30,8 @@ class LiruCloudClient {
         this.checkForRoot(args)
         this.checkForDebug(args)
 
+        KODEIN.direct.instance<NetworkClient>().startClient("127.0.0.1", 8080)
+
         this.startTasks()
     }
 
@@ -31,7 +43,20 @@ class LiruCloudClient {
 
     private fun initializeDI() {
         KODEIN = DI {
+            bindSingleton { ThreadPool() }
+            bindSingleton { NettyHelper() }
+            bindSingleton { NetworkUtil() }
 
+            bindSingleton {
+                val packetRegistry = PacketRegistry()
+
+                packetRegistry.registerOutgoingPacket(1, PacketOutHandshake::class.java)
+                packetRegistry.registerIncomingPacket(2, PacketInHandshakeResult::class.java)
+
+                packetRegistry
+            }
+
+            bindSingleton { NetworkClient(instance(), instance(), instance(), instance()) }
         }
     }
 
