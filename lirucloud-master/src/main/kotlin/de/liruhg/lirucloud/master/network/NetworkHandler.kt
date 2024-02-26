@@ -18,11 +18,12 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
         this.logger.info(
             "New channel with Id: [${
                 channelHandlerContext.channel().id()
-            }] connected. Awaiting handshake."
+            }] connected. Awaiting handshake..."
         )
     }
 
     override fun channelInactive(channelHandlerContext: ChannelHandlerContext) {
+        // TODO: Unregister client and services running on client
     }
 
     @Deprecated("Deprecated in Java")

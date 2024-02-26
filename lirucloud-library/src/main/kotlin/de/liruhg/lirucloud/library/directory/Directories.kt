@@ -4,8 +4,8 @@ class Directories {
 
     companion object {
         private const val ROOT_PREFIX = "app"
-        const val MASTER_ROOT = "$ROOT_PREFIX/master"
 
+        const val MASTER_ROOT = "$ROOT_PREFIX/master"
         const val MASTER_CONFIGURATION = "$MASTER_ROOT/configuration"
         const val MASTER_KEYS = "$MASTER_ROOT/keys"
         const val MASTER_SOFTWARE = "$MASTER_ROOT/software"

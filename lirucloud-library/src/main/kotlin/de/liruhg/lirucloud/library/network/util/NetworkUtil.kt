@@ -20,9 +20,7 @@ class NetworkUtil {
     inline fun <reified T : Packet> sendPacket(packet: Packet, channel: Channel, crossinline callback: (T) -> Unit) {
         this.callbacks[packet.callbackId] = {
             if (it is T) callback(it)
-            else {
-                // TODO: Throw err
-            }
+            else throw IllegalStateException("Received unwanted response packet with CallbackId: [${packet.callbackId}]")
         }
 
         this.sendPacket(packet, channel)

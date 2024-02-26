@@ -4,5 +4,6 @@ import de.liruhg.lirucloud.library.network.protocol.Packet
 
 class PacketInHandshakeResult : Packet() {
 
-    lateinit var message: String
+    var message: String = ""
+    var success: Boolean = false
 }

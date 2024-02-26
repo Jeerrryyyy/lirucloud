@@ -44,10 +44,6 @@ class NettyHelper {
         return if (this.isEpoll()) EpollServerSocketChannel::class.java else NioServerSocketChannel::class.java
     }
 
-    fun getWebServerChannelClass(): Class<out ServerSocketChannel> {
-        return if (this.isEpoll()) EpollServerSocketChannel::class.java else NioServerSocketChannel::class.java
-    }
-
     fun createClientCert(): SslContext? {
         var sslContext: SslContext? = null
 
