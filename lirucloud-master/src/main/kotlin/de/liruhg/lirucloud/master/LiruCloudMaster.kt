@@ -8,23 +8,29 @@ import de.liruhg.lirucloud.library.configuration.ConfigurationExecutor
 import de.liruhg.lirucloud.library.database.DatabaseConnectionFactory
 import de.liruhg.lirucloud.library.database.handler.SyncFileHandler
 import de.liruhg.lirucloud.library.network.helper.NettyHelper
+import de.liruhg.lirucloud.library.network.protocol.PacketId
 import de.liruhg.lirucloud.library.network.protocol.PacketRegistry
 import de.liruhg.lirucloud.library.network.util.NetworkUtil
 import de.liruhg.lirucloud.library.thread.ThreadPool
 import de.liruhg.lirucloud.library.util.PortUtil
-import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInHandshake
-import de.liruhg.lirucloud.master.client.protocol.out.PacketOutHandshakeResult
+import de.liruhg.lirucloud.master.client.ClientRegistry
+import de.liruhg.lirucloud.master.client.protocol.`in`.PacketInClientRequestHandshake
+import de.liruhg.lirucloud.master.client.protocol.out.PacketOutClientHandshakeResult
 import de.liruhg.lirucloud.master.configuration.CloudKeysCreator
 import de.liruhg.lirucloud.master.configuration.DefaultCloudConfiguration
 import de.liruhg.lirucloud.master.configuration.DefaultFolderCreator
+import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
 import de.liruhg.lirucloud.master.network.NetworkServer
 import de.liruhg.lirucloud.master.store.Store
+import de.liruhg.lirucloud.master.task.CheckDanglingConnectionsTask
 import org.kodein.di.DI
 import org.kodein.di.bindSingleton
 import org.kodein.di.direct
 import org.kodein.di.instance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 class LiruCloudMaster {
@@ -90,6 +96,9 @@ class LiruCloudMaster {
                 configurationExecutor
             }
 
+            bindSingleton { ClientRegistry() }
+            bindSingleton { NetworkConnectionRegistry() }
+
             bindSingleton {
                 val commandManager = CommandManager(instance())
 
@@ -102,8 +111,14 @@ class LiruCloudMaster {
             bindSingleton {
                 val packetRegistry = PacketRegistry()
 
-                packetRegistry.registerIncomingPacket(1, PacketInHandshake::class.java)
-                packetRegistry.registerOutgoingPacket(2, PacketOutHandshakeResult::class.java)
+                packetRegistry.registerIncomingPacket(
+                    PacketId.PACKET_CLIENT_REQUEST_HANDSHAKE,
+                    PacketInClientRequestHandshake::class.java
+                )
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_CLIENT_HANDSHAKE_RESULT,
+                    PacketOutClientHandshakeResult::class.java
+                )
 
                 packetRegistry
             }
@@ -127,5 +142,11 @@ class LiruCloudMaster {
     }
 
     private fun startTasks() {
+        val timer = Timer("lirucloud-timer")
+        timer.scheduleAtFixedRate(
+            CheckDanglingConnectionsTask(),
+            TimeUnit.SECONDS.toMillis(15),
+            TimeUnit.SECONDS.toMillis(15)
+        )
     }
 }
