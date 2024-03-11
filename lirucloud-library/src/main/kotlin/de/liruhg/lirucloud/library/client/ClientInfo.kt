@@ -2,7 +2,7 @@ package de.liruhg.lirucloud.library.client
 
 import io.netty.channel.Channel
 
-data class ClientInfoModel(
+data class ClientInfo(
     val uuid: String,
     val name: String,
     val delimiter: String,

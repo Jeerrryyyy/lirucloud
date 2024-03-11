@@ -6,7 +6,7 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.gridfs.GridFSBucket
 import com.mongodb.client.gridfs.GridFSBuckets
-import de.liruhg.lirucloud.library.configuration.model.DatabaseConnectionModel
+import de.liruhg.lirucloud.library.configuration.model.DatabaseConnection
 import org.bson.Document
 
 class DatabaseConnectionFactory {
@@ -16,13 +16,13 @@ class DatabaseConnectionFactory {
     lateinit var proxyGroupsCollection: MongoCollection<Document>
     lateinit var serverGroupsCollection: MongoCollection<Document>
 
-    fun connectDatabase(databaseConnectionModel: DatabaseConnectionModel) {
-        val mongoClient: MongoClient = MongoClients.create(databaseConnectionModel.connectionUrl)
-        val mongoDatabase: MongoDatabase = mongoClient.getDatabase(databaseConnectionModel.databaseName)
+    fun connectDatabase(databaseConnection: DatabaseConnection) {
+        val mongoClient: MongoClient = MongoClients.create(databaseConnection.connectionUrl)
+        val mongoDatabase: MongoDatabase = mongoClient.getDatabase(databaseConnection.databaseName)
 
-        this.gridFsBucket = GridFSBuckets.create(mongoDatabase, databaseConnectionModel.bucketName)
+        this.gridFsBucket = GridFSBuckets.create(mongoDatabase, databaseConnection.bucketName)
 
-        databaseConnectionModel.collections.forEach { (identifier, collectionName) ->
+        databaseConnection.collections.forEach { (identifier, collectionName) ->
             when (identifier) {
                 "filesCollection" -> this.filesCollection = mongoDatabase.getCollection(collectionName)
                 "proxyGroupsCollection" -> this.proxyGroupsCollection = mongoDatabase.getCollection(collectionName)

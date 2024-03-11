@@ -1,6 +1,6 @@
 package de.liruhg.lirucloud.library.configuration.model
 
-data class CacheConnectionModel(
+data class CacheConnection(
     val host: String,
     val port: Int,
     val user: String,

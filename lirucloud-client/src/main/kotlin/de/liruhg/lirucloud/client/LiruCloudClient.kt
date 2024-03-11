@@ -1,11 +1,16 @@
 package de.liruhg.lirucloud.client
 
-import de.liruhg.lirucloud.client.configuration.CloudKeysCreator
-import de.liruhg.lirucloud.client.configuration.DefaultCloudConfiguration
-import de.liruhg.lirucloud.client.configuration.DefaultFolderCreator
+import de.liruhg.lirucloud.client.configuration.*
 import de.liruhg.lirucloud.client.network.NetworkClient
 import de.liruhg.lirucloud.client.network.protocol.`in`.PacketInClientHandshakeResult
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestHandshake
+import de.liruhg.lirucloud.client.process.ProcessRegistry
+import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestProcess
+import de.liruhg.lirucloud.client.process.protocol.out.PacketOutRequestProcessResult
+import de.liruhg.lirucloud.client.process.proxy.ProxyConfigurationGenerator
+import de.liruhg.lirucloud.client.process.proxy.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.client.process.server.ServerConfigGenerator
+import de.liruhg.lirucloud.client.process.server.ServerProcessRequestHandler
 import de.liruhg.lirucloud.client.store.Store
 import de.liruhg.lirucloud.library.command.CommandManager
 import de.liruhg.lirucloud.library.command.commands.CloudExitCommand
@@ -48,8 +53,7 @@ class LiruCloudClient {
 
         val store = KODEIN.direct.instance<Store>()
 
-        //KODEIN.direct.instance<DatabaseConnectionFactory>().connectDatabase(store.cloudConfiguration.database)
-
+        KODEIN.direct.instance<DatabaseConnectionFactory>().connectDatabase(store.cloudConfiguration.database)
         KODEIN.direct.instance<ConfigurationExecutor>().executeConfigurations()
         KODEIN.direct.instance<CommandManager>().start()
         KODEIN.direct.instance<NetworkClient>()
@@ -61,6 +65,8 @@ class LiruCloudClient {
     fun shutdownGracefully() {
         this.logger.info("Shutting down LiruCloud gracefully... Please be patient.")
 
+        KODEIN.direct.instance<ProcessRegistry>().shutdownServers()
+        KODEIN.direct.instance<ProcessRegistry>().shutdownProxies()
         KODEIN.direct.instance<CommandManager>().stop()
         KODEIN.direct.instance<NetworkClient>().shutdownGracefully()
         KODEIN.direct.instance<ThreadPool>().shutdown()
@@ -84,6 +90,8 @@ class LiruCloudClient {
                 val configurationExecutor = ConfigurationExecutor()
 
                 configurationExecutor.registerConfiguration(CloudKeysCreator(instance()))
+                configurationExecutor.registerConfiguration(ProxySoftwareDownloader(instance()))
+                configurationExecutor.registerConfiguration(ServerSoftwareDownloader(instance()))
 
                 configurationExecutor
             }
@@ -97,16 +105,33 @@ class LiruCloudClient {
                 commandManager
             }
 
+            bindSingleton { ProcessRegistry() }
+
+            bindSingleton { ProxyConfigurationGenerator() }
+            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
+
+            bindSingleton { ServerConfigGenerator() }
+            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance(), instance()) }
+
             bindSingleton {
                 val packetRegistry = PacketRegistry()
+
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_CLIENT_REQUEST_HANDSHAKE,
+                    PacketOutClientRequestHandshake::class.java
+                )
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_REQUEST_PROCESS_RESULT,
+                    PacketOutRequestProcessResult::class.java
+                )
 
                 packetRegistry.registerIncomingPacket(
                     PacketId.PACKET_CLIENT_HANDSHAKE_RESULT,
                     PacketInClientHandshakeResult::class.java
                 )
-                packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_CLIENT_REQUEST_HANDSHAKE,
-                    PacketOutClientRequestHandshake::class.java
+                packetRegistry.registerIncomingPacket(
+                    PacketId.PACKET_REQUEST_PROCESS,
+                    PacketInRequestProcess::class.java
                 )
 
                 packetRegistry

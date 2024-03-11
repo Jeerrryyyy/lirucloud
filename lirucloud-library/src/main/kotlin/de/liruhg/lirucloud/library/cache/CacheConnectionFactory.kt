@@ -1,6 +1,6 @@
 package de.liruhg.lirucloud.library.cache
 
-import de.liruhg.lirucloud.library.configuration.model.CacheConnectionModel
+import de.liruhg.lirucloud.library.configuration.model.CacheConnection
 import redis.clients.jedis.DefaultJedisClientConfig
 import redis.clients.jedis.HostAndPort
 import redis.clients.jedis.JedisPooled
@@ -9,13 +9,13 @@ class CacheConnectionFactory {
 
     lateinit var jedisPooled: JedisPooled
 
-    fun connectCache(cacheConnectionModel: CacheConnectionModel) {
+    fun connectCache(cacheConnection: CacheConnection) {
         this.jedisPooled = JedisPooled(
-            HostAndPort(cacheConnectionModel.host, cacheConnectionModel.port),
+            HostAndPort(cacheConnection.host, cacheConnection.port),
             DefaultJedisClientConfig.builder()
-                .user(cacheConnectionModel.user)
-                .password(cacheConnectionModel.password)
-                .database(cacheConnectionModel.database)
+                .user(cacheConnection.user)
+                .password(cacheConnection.password)
+                .database(cacheConnection.database)
                 .build()
         )
     }

@@ -4,7 +4,7 @@ import de.liruhg.lirucloud.client.LiruCloudClient
 import de.liruhg.lirucloud.client.network.protocol.`in`.PacketInClientHandshakeResult
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestHandshake
 import de.liruhg.lirucloud.client.store.Store
-import de.liruhg.lirucloud.library.client.ClientInfoModel
+import de.liruhg.lirucloud.library.client.ClientInfo
 import de.liruhg.lirucloud.library.network.protocol.Packet
 import de.liruhg.lirucloud.library.network.util.NetworkUtil
 import io.netty.channel.ChannelHandlerContext
@@ -31,7 +31,7 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
         this.networkUtil.sendPacket<PacketInClientHandshakeResult>(
             PacketOutClientRequestHandshake(
                 this.store.clientKey,
-                ClientInfoModel(
+                ClientInfo(
                     uuid = this.store.cloudConfiguration.uuid,
                     name = this.store.cloudConfiguration.name,
                     delimiter = this.store.cloudConfiguration.delimiter,

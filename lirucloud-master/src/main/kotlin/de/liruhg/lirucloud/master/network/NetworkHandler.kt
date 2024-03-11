@@ -35,17 +35,17 @@ class NetworkHandler : SimpleChannelInboundHandler<Packet>() {
 
     override fun channelInactive(channelHandlerContext: ChannelHandlerContext) {
         val channel = channelHandlerContext.channel()
-        var clientInfoModel = this.clientRegistry.getClientByChannel(channelHandlerContext.channel())
+        val clientInfo = this.clientRegistry.getClientByChannel(channelHandlerContext.channel())
 
-        if (clientInfoModel != null) {
-            val clientName = "${clientInfoModel.name}${clientInfoModel.delimiter}${clientInfoModel.suffix}"
+        if (clientInfo != null) {
+            val clientName = "${clientInfo.name}${clientInfo.delimiter}${clientInfo.suffix}"
 
-            this.clientRegistry.unregisterClient(clientInfoModel)
+            this.clientRegistry.unregisterClient(clientInfo)
 
             this.logger.info(
                 "Channel with Id: [${
                     channel.id()
-                }] disconnected. Removing client with Id: [${clientInfoModel.uuid}] - Name: [$clientName]"
+                }] disconnected. Removing client with Id: [${clientInfo.uuid}] - Name: [$clientName]"
             )
         }
 

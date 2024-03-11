@@ -1,11 +1,13 @@
 package de.liruhg.lirucloud.master.client.protocol.`in`
 
-import de.liruhg.lirucloud.library.client.ClientInfoModel
+import de.liruhg.lirucloud.library.client.ClientInfo
 import de.liruhg.lirucloud.library.network.protocol.Packet
 import de.liruhg.lirucloud.library.network.util.NetworkUtil
 import de.liruhg.lirucloud.master.LiruCloudMaster
 import de.liruhg.lirucloud.master.client.ClientRegistry
 import de.liruhg.lirucloud.master.client.protocol.out.PacketOutClientHandshakeResult
+import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
+import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
 import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
 import de.liruhg.lirucloud.master.store.Store
 import io.netty.channel.Channel
@@ -22,18 +24,20 @@ class PacketInClientRequestHandshake : Packet() {
     private val networkUtil: NetworkUtil by LiruCloudMaster.KODEIN.instance()
     private val clientRegistry: ClientRegistry by LiruCloudMaster.KODEIN.instance()
     private val networkConnectionRegistry: NetworkConnectionRegistry by LiruCloudMaster.KODEIN.instance()
+    private val proxyGroupHandler: ProxyGroupHandler by LiruCloudMaster.KODEIN.instance()
+    private val serverGroupHandler: ServerGroupHandler by LiruCloudMaster.KODEIN.instance()
 
     private lateinit var clientKey: String
-    private lateinit var clientInfoModel: ClientInfoModel
+    private lateinit var clientInfo: ClientInfo
 
     override fun handle(channelHandlerContext: ChannelHandlerContext) {
         val channel = channelHandlerContext.channel()
 
-        this.clientInfoModel.channel = channel
+        this.clientInfo.channel = channel
 
-        val clientName = "${this.clientInfoModel.name}${this.clientInfoModel.delimiter}${this.clientInfoModel.suffix}"
+        val clientName = "${this.clientInfo.name}${this.clientInfo.delimiter}${this.clientInfo.suffix}"
 
-        if (!this.isClientAuthenticated(this.clientInfoModel.channel!!, clientName)) {
+        if (!this.isClientAuthenticated(this.clientInfo.channel!!, clientName)) {
             this.networkUtil.sendResponse(
                 this,
                 PacketOutClientHandshakeResult(
@@ -52,21 +56,21 @@ class PacketInClientRequestHandshake : Packet() {
             return
         }
 
-        if (this.clientInfoModel.responsibleGroups.isEmpty()) {
-            //val proxyGroups = this.proxyGroupHandler.getGroups()
-            //    .map { it.name }
-            //    .toSet()
+        if (this.clientInfo.responsibleGroups.isEmpty()) {
+            val proxyGroups = this.proxyGroupHandler.getGroups()
+                .map { it.name }
+                .toSet()
 
-            //val serverGroups = this.serverGroupHandler.getGroups()
-            //    .map { it.name }
-            //    .toSet()
+            val serverGroups = this.serverGroupHandler.getGroups()
+                .map { it.name }
+                .toSet()
 
-            //this.clientInfoModel.responsibleGroups = proxyGroups + serverGroups
+            this.clientInfo.responsibleGroups = proxyGroups + serverGroups
 
             this.logger.warn("Client with Name: [$clientName] has no responsible groups assigned. Assigning to all groups!")
         }
 
-        if (!this.clientRegistry.registerClient(this.clientInfoModel)) {
+        if (!this.clientRegistry.registerClient(this.clientInfo)) {
             this.networkUtil.sendResponse(
                 this,
                 PacketOutClientHandshakeResult(

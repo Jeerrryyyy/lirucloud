@@ -1,59 +1,59 @@
 package de.liruhg.lirucloud.master.client
 
-import de.liruhg.lirucloud.library.client.ClientInfoModel
+import de.liruhg.lirucloud.library.client.ClientInfo
 import io.netty.channel.Channel
 
 class ClientRegistry {
 
-    private val clients: MutableMap<String, ClientInfoModel> = mutableMapOf()
+    private val clients: MutableMap<String, ClientInfo> = mutableMapOf()
 
-    fun registerClient(clientInfoModel: ClientInfoModel): Boolean {
-        if (this.clients.containsKey(clientInfoModel.uuid)) return false
-        this.clients[clientInfoModel.uuid] = clientInfoModel
+    fun registerClient(clientInfo: ClientInfo): Boolean {
+        if (this.clients.containsKey(clientInfo.uuid)) return false
+        this.clients[clientInfo.uuid] = clientInfo
 
-        return this.clients.containsKey(clientInfoModel.uuid)
+        return this.clients.containsKey(clientInfo.uuid)
     }
 
-    fun unregisterClient(clientInfoModel: ClientInfoModel): Boolean {
-        if (!this.clients.containsKey(clientInfoModel.uuid)) return false
-        this.clients.remove(clientInfoModel.uuid)
+    fun unregisterClient(clientInfo: ClientInfo): Boolean {
+        if (!this.clients.containsKey(clientInfo.uuid)) return false
+        this.clients.remove(clientInfo.uuid)
 
-        return !this.clients.containsKey(clientInfoModel.uuid)
+        return !this.clients.containsKey(clientInfo.uuid)
     }
 
-    fun updateClient(clientInfoModel: ClientInfoModel) {
-        this.unregisterClient(clientInfoModel)
-        this.registerClient(clientInfoModel)
+    fun updateClient(clientInfo: ClientInfo) {
+        this.unregisterClient(clientInfo)
+        this.registerClient(clientInfo)
     }
 
-    fun getClient(uuid: String): ClientInfoModel? {
+    fun getClient(uuid: String): ClientInfo? {
         return this.clients[uuid]
     }
 
-    //fun getClient(process: CloudProcess): ClientInfoModel? {
+    //fun getClient(process: CloudProcess): ClientInfo? {
     //return this.clients.values.firstOrNull { client ->
     //client.runningProcesses.any { it == process.uuid }
     //}
     //}
 
-    fun getClientsByGroup(group: String): Set<ClientInfoModel> {
+    fun getClientsByGroup(group: String): Set<ClientInfo> {
         return this.clients.values.filter { it.responsibleGroups.contains(group) }.toSet()
     }
 
-    fun getClientByChannel(channel: Channel): ClientInfoModel? {
+    fun getClientByChannel(channel: Channel): ClientInfo? {
         return this.clients.values.firstOrNull { it.channel == channel }
     }
 
-    fun getClients(): Set<ClientInfoModel> {
+    fun getClients(): Set<ClientInfo> {
         return this.clients.values.toSet()
     }
 
-    fun getLeastUsedClient(group: String): ClientInfoModel? {
+    fun getLeastUsedClient(group: String): ClientInfo? {
         val clientsForGroup = this.getClientsByGroup(group)
 
         if (clientsForGroup.isEmpty()) return null
 
-        var bestClient: ClientInfoModel? = null
+        var bestClient: ClientInfo? = null
 
         for (client in clientsForGroup) {
             if (bestClient == null) {

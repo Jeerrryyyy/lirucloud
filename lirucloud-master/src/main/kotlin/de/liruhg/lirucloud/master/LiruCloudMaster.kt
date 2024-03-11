@@ -19,8 +19,19 @@ import de.liruhg.lirucloud.master.client.protocol.out.PacketOutClientHandshakeRe
 import de.liruhg.lirucloud.master.configuration.CloudKeysCreator
 import de.liruhg.lirucloud.master.configuration.DefaultCloudConfiguration
 import de.liruhg.lirucloud.master.configuration.DefaultFolderCreator
+import de.liruhg.lirucloud.master.configuration.proxy.ProxyGroupLoader
+import de.liruhg.lirucloud.master.configuration.proxy.ProxySoftwareDownloadConfiguration
+import de.liruhg.lirucloud.master.configuration.server.ServerGroupLoader
+import de.liruhg.lirucloud.master.configuration.server.ServerSoftwareDownloadConfiguration
+import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
+import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
 import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
 import de.liruhg.lirucloud.master.network.NetworkServer
+import de.liruhg.lirucloud.master.process.ProcessRegistry
+import de.liruhg.lirucloud.master.process.protocol.`in`.PacketInRequestProcessResult
+import de.liruhg.lirucloud.master.process.protocol.out.PacketOutRequestProcess
+import de.liruhg.lirucloud.master.process.proxy.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.master.process.server.ServerProcessRequestHandler
 import de.liruhg.lirucloud.master.store.Store
 import de.liruhg.lirucloud.master.task.CheckDanglingConnectionsTask
 import org.kodein.di.DI
@@ -55,8 +66,8 @@ class LiruCloudMaster {
 
         val store = KODEIN.direct.instance<Store>()
 
-        //KODEIN.direct.instance<DatabaseConnectionFactory>().connectDatabase(store.cloudConfiguration.database)
-        //KODEIN.direct.instance<CacheConnectionFactory>().connectCache(store.cloudConfiguration.cache)
+        KODEIN.direct.instance<DatabaseConnectionFactory>().connectDatabase(store.cloudConfiguration.database)
+        KODEIN.direct.instance<CacheConnectionFactory>().connectCache(store.cloudConfiguration.cache)
 
         KODEIN.direct.instance<ConfigurationExecutor>().executeConfigurations()
         KODEIN.direct.instance<CommandManager>().start()
@@ -88,10 +99,19 @@ class LiruCloudMaster {
 
             bindSingleton { SyncFileHandler(instance()) }
 
+            bindSingleton { ServerGroupHandler(instance(), instance(), instance()) }
+            bindSingleton { ProxyGroupHandler(instance(), instance(), instance()) }
+
             bindSingleton {
                 val configurationExecutor = ConfigurationExecutor()
 
                 configurationExecutor.registerConfiguration(CloudKeysCreator(instance()))
+
+                configurationExecutor.registerConfiguration(ProxySoftwareDownloadConfiguration(instance()))
+                configurationExecutor.registerConfiguration(ProxyGroupLoader(instance()))
+
+                configurationExecutor.registerConfiguration(ServerSoftwareDownloadConfiguration(instance()))
+                configurationExecutor.registerConfiguration(ServerGroupLoader(instance()))
 
                 configurationExecutor
             }
@@ -115,13 +135,27 @@ class LiruCloudMaster {
                     PacketId.PACKET_CLIENT_REQUEST_HANDSHAKE,
                     PacketInClientRequestHandshake::class.java
                 )
+                packetRegistry.registerIncomingPacket(
+                    PacketId.PACKET_REQUEST_PROCESS_RESULT,
+                    PacketInRequestProcessResult::class.java
+                )
+
                 packetRegistry.registerOutgoingPacket(
                     PacketId.PACKET_CLIENT_HANDSHAKE_RESULT,
                     PacketOutClientHandshakeResult::class.java
                 )
+                packetRegistry.registerOutgoingPacket(
+                    PacketId.PACKET_REQUEST_PROCESS,
+                    PacketOutRequestProcess::class.java
+                )
 
                 packetRegistry
             }
+
+            bindSingleton { ProcessRegistry(instance()) }
+
+            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance()) }
+            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance()) }
 
             bindSingleton { NetworkServer(instance(), instance(), instance(), instance()) }
         }
