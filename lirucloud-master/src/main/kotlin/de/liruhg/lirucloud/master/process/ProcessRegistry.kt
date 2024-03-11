@@ -4,6 +4,7 @@ import de.liruhg.lirucloud.library.cache.CacheConnectionFactory
 import de.liruhg.lirucloud.library.cache.CachePrefix
 import de.liruhg.lirucloud.library.cache.extension.*
 import de.liruhg.lirucloud.library.process.CloudProcess
+import de.liruhg.lirucloud.library.process.ProcessType
 import io.netty.channel.Channel
 
 class ProcessRegistry(
@@ -56,6 +57,11 @@ class ProcessRegistry(
     fun getProcesses(groupName: String): List<CloudProcess> {
         return this.cacheConnectionFactory.jedisPooled.getAllEntities<CloudProcess>("${CachePrefix.PROCESS.prefix}:*")
             .filter { it.groupName == groupName }
+    }
+
+    fun getProcesses(type: ProcessType): List<CloudProcess> {
+        return this.cacheConnectionFactory.jedisPooled.getAllEntities<CloudProcess>("${CachePrefix.PROCESS.prefix}:*")
+            .filter { it.type == type }
     }
 
     fun addChannel(uuid: String, channel: Channel) {

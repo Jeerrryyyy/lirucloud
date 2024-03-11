@@ -34,6 +34,7 @@ import de.liruhg.lirucloud.master.process.proxy.ProxyProcessRequestHandler
 import de.liruhg.lirucloud.master.process.server.ServerProcessRequestHandler
 import de.liruhg.lirucloud.master.store.Store
 import de.liruhg.lirucloud.master.task.CheckDanglingConnectionsTask
+import de.liruhg.lirucloud.master.task.CheckProxiesTask
 import org.kodein.di.DI
 import org.kodein.di.bindSingleton
 import org.kodein.di.direct
@@ -181,6 +182,11 @@ class LiruCloudMaster {
             CheckDanglingConnectionsTask(),
             TimeUnit.SECONDS.toMillis(15),
             TimeUnit.SECONDS.toMillis(15)
+        )
+        timer.scheduleAtFixedRate(
+            CheckProxiesTask(),
+            TimeUnit.SECONDS.toMillis(5),
+            TimeUnit.SECONDS.toMillis(5)
         )
     }
 }

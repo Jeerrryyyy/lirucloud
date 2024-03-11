@@ -5,6 +5,7 @@ import de.liruhg.lirucloud.library.configuration.model.DatabaseConnection
 
 data class CloudConfiguration(
     val serverPort: Int,
+    val defaultProxyGroupName: String,
     val database: DatabaseConnection,
     val cache: CacheConnection,
     val validClients: Set<ValidClient>
