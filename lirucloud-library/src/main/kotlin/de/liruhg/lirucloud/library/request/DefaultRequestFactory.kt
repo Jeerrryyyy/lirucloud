@@ -2,7 +2,7 @@ package de.liruhg.lirucloud.library.request
 
 import java.io.InputStream
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 
 class DefaultRequestFactory : RequestFactory {
 
@@ -10,7 +10,7 @@ class DefaultRequestFactory : RequestFactory {
 
     override fun newFactory(url: String): RequestFactory {
         HttpURLConnection.setFollowRedirects(true)
-        this.httpUrlConnection = URL(url).openConnection() as HttpURLConnection
+        this.httpUrlConnection = URI(url).toURL().openConnection() as HttpURLConnection
         return this
     }
 

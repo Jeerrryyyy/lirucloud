@@ -1,0 +1,51 @@
+name: Build and Save Artifacts
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Upload lirucloud-api JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: lirucloud-api
+          path: lirucloud-api/build/libs/lirucloud-api-*.jar
+
+      - name: Upload lirucloud-client JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: lirucloud-client
+          path: lirucloud-client/build/libs/lirucloud-client-*-all.jar
+
+      - name: Upload lirucloud-library JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: lirucloud-library
+          path: lirucloud-library/build/libs/lirucloud-library-*.jar
+
+      - name: Upload lirucloud-master JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: lirucloud-master
+          path: lirucloud-master/build/libs/lirucloud-master-*-all.jar
