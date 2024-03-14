@@ -148,7 +148,7 @@ class LiruCloudClient {
 
         this.logger.warn("Please consider not to use the \"root\" user for security reasons!")
         this.logger.warn("If you want to use it anyway, at your own risk, add \"--enable-root\" to the start arguments.")
-        exitProcess(1)
+        exitProcess(0)
     }
 
     private fun checkForDebug(args: Array<String>) {
