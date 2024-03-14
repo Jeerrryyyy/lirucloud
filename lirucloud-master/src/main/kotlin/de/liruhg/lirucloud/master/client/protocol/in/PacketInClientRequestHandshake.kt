@@ -9,6 +9,8 @@ import de.liruhg.lirucloud.master.client.protocol.out.PacketOutClientHandshakeRe
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
 import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
 import de.liruhg.lirucloud.master.network.NetworkConnectionRegistry
+import de.liruhg.lirucloud.master.process.proxy.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.master.process.server.ServerProcessRequestHandler
 import de.liruhg.lirucloud.master.store.Store
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -26,6 +28,8 @@ class PacketInClientRequestHandshake : Packet() {
     private val networkConnectionRegistry: NetworkConnectionRegistry by LiruCloudMaster.KODEIN.instance()
     private val proxyGroupHandler: ProxyGroupHandler by LiruCloudMaster.KODEIN.instance()
     private val serverGroupHandler: ServerGroupHandler by LiruCloudMaster.KODEIN.instance()
+    private val proxyProcessRequestHandler: ProxyProcessRequestHandler by LiruCloudMaster.KODEIN.instance()
+    private val serverProcessRequestHandler: ServerProcessRequestHandler by LiruCloudMaster.KODEIN.instance()
 
     private lateinit var clientKey: String
     private lateinit var clientInfo: ClientInfo
@@ -101,6 +105,14 @@ class PacketInClientRequestHandshake : Packet() {
                 channel.remoteAddress().toString().replace("/", "")
             }]"
         )
+
+        if (this.clientInfo.responsibleGroups.contains(this.store.cloudConfiguration.defaultProxyGroupName)) {
+            this.proxyProcessRequestHandler.checkDefaultProcesses(this.clientInfo)
+        }
+
+        if (this.clientInfo.responsibleGroups.contains(this.store.cloudConfiguration.defaultLobbyGroupName)) {
+            this.serverProcessRequestHandler.checkDefaultProcesses(this.clientInfo)
+        }
     }
 
     private fun isClientAuthenticated(channel: Channel, clientName: String): Boolean {

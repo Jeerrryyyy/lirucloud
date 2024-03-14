@@ -28,6 +28,7 @@ class DefaultCloudConfiguration(
             val cloudConfiguration = CloudConfiguration(
                 serverPort = 8080,
                 defaultProxyGroupName = "Proxy",
+                defaultLobbyGroupName = "Lobby",
                 database = DatabaseConnection(
                     connectionUrl = "mongodb://localhost:27017",
                     databaseName = "lirucloud",

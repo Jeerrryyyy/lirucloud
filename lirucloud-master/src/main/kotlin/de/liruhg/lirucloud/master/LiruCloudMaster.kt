@@ -34,6 +34,7 @@ import de.liruhg.lirucloud.master.process.proxy.ProxyProcessRequestHandler
 import de.liruhg.lirucloud.master.process.server.ServerProcessRequestHandler
 import de.liruhg.lirucloud.master.store.Store
 import de.liruhg.lirucloud.master.task.CheckDanglingConnectionsTask
+import de.liruhg.lirucloud.master.task.CheckLobbiesTask
 import de.liruhg.lirucloud.master.task.CheckProxiesTask
 import org.kodein.di.DI
 import org.kodein.di.bindSingleton
@@ -155,8 +156,8 @@ class LiruCloudMaster {
 
             bindSingleton { ProcessRegistry(instance()) }
 
-            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance()) }
-            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance()) }
+            bindSingleton { ProxyProcessRequestHandler(instance(), instance(), instance(), instance(), instance(), instance()) }
+            bindSingleton { ServerProcessRequestHandler(instance(), instance(), instance(), instance(), instance(), instance()) }
 
             bindSingleton { NetworkServer(instance(), instance(), instance(), instance()) }
         }
@@ -185,8 +186,13 @@ class LiruCloudMaster {
         )
         timer.scheduleAtFixedRate(
             CheckProxiesTask(),
-            TimeUnit.SECONDS.toMillis(5),
-            TimeUnit.SECONDS.toMillis(5)
+            TimeUnit.MINUTES.toMillis(1),
+            TimeUnit.MINUTES.toMillis(1)
+        )
+        timer.scheduleAtFixedRate(
+            CheckLobbiesTask(),
+            TimeUnit.MINUTES.toMillis(1),
+            TimeUnit.MINUTES.toMillis(1)
         )
     }
 }
