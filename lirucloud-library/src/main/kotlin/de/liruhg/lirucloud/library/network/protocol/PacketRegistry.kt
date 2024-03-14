@@ -27,4 +27,12 @@ class PacketRegistry {
     fun registerOutgoingPacket(packetId: PacketId, packetClass: Class<out Packet>) {
         this.outgoingPackets[packetId.id] = packetClass
     }
+
+    fun registerIncomingPacket(packetId: Int, packetClass: Class<out Packet>) {
+        this.incomingPackets[packetId] = packetClass
+    }
+
+    fun registerOutgoingPacket(packetId: Int, packetClass: Class<out Packet>) {
+        this.outgoingPackets[packetId] = packetClass
+    }
 }

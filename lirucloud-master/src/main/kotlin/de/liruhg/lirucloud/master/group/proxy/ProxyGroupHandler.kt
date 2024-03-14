@@ -17,7 +17,6 @@ import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.library.util.HashUtils
 import de.liruhg.lirucloud.master.group.GroupHandler
-import de.liruhg.lirucloud.master.group.proxy.model.ProxyGroupModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -27,11 +26,11 @@ class ProxyGroupHandler(
     private val fileHandler: FileHandler,
     private val databaseConnectionFactory: DatabaseConnectionFactory,
     private val cacheConnectionFactory: CacheConnectionFactory
-) : GroupHandler<ProxyGroupModel> {
+) : GroupHandler<ProxyGroup> {
 
     private val logger: Logger = LoggerFactory.getLogger(ProxyGroupHandler::class.java)
 
-    override fun createGroup(group: ProxyGroupModel) {
+    override fun createGroup(group: ProxyGroup) {
         this.databaseConnectionFactory.proxyGroupsCollection.insertEntity(group)
 
         this.registerGroup(group)
@@ -50,7 +49,7 @@ class ProxyGroupHandler(
 
         FileUtils.writeStringToFile(
             File(defaultTemplatePath.toFile(), "LICENSE.txt"),
-            "This server is provided by LiruCloud entirely written by JevzoTV. You are not allowed to redistribute this software or claim it as your own."
+            "This server is provided by LiruCloud entirely written by Jevzo (voidptr). You are not allowed to redistribute this software or claim it as your own."
         )
 
         FileUtils.copyAllFiles(
@@ -70,7 +69,7 @@ class ProxyGroupHandler(
         this.logger.info("Successfully created group with Name: [${group.name}]")
     }
 
-    override fun deleteGroup(group: ProxyGroupModel) {
+    override fun deleteGroup(group: ProxyGroup) {
         this.fileHandler.deleteFile(HashUtils.hashStringMD5(group.name))
 
         FileUtils.deleteFullDirectory(Path.of("${Directories.MASTER_TEMPLATE_PROXY}/${group.name}"))
@@ -83,7 +82,7 @@ class ProxyGroupHandler(
     }
 
     override fun groupExists(name: String): Boolean {
-        return this.databaseConnectionFactory.proxyGroupsCollection.getEntity<ProxyGroupModel>(
+        return this.databaseConnectionFactory.proxyGroupsCollection.getEntity<ProxyGroup>(
             Filters.eq(
                 "name",
                 name
@@ -95,27 +94,27 @@ class ProxyGroupHandler(
         return this.databaseConnectionFactory.proxyGroupsCollection.countDocuments() == 0L
     }
 
-    override fun fetchGroups(): Set<ProxyGroupModel> {
-        return this.databaseConnectionFactory.proxyGroupsCollection.getAllEntities<ProxyGroupModel>().toSet()
+    override fun fetchGroups(): Set<ProxyGroup> {
+        return this.databaseConnectionFactory.proxyGroupsCollection.getAllEntities<ProxyGroup>().toSet()
     }
 
-    override fun fetchGroup(name: String): ProxyGroupModel? {
+    override fun fetchGroup(name: String): ProxyGroup? {
         return this.databaseConnectionFactory.proxyGroupsCollection.getEntity(Filters.eq("name", name))
     }
 
-    override fun registerGroup(group: ProxyGroupModel) {
+    override fun registerGroup(group: ProxyGroup) {
         this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.PROXY_GROUP, group.name, group)
     }
 
-    override fun unregisterGroup(group: ProxyGroupModel) {
+    override fun unregisterGroup(group: ProxyGroup) {
         this.cacheConnectionFactory.jedisPooled.deleteEntity(CachePrefix.PROXY_GROUP, group.name)
     }
 
-    override fun getGroup(name: String): ProxyGroupModel? {
+    override fun getGroup(name: String): ProxyGroup? {
         return this.cacheConnectionFactory.jedisPooled.getEntity(CachePrefix.PROXY_GROUP, name)
     }
 
-    override fun getGroups(): List<ProxyGroupModel> {
+    override fun getGroups(): List<ProxyGroup> {
         return this.cacheConnectionFactory.jedisPooled.getAllEntities("${CachePrefix.PROXY_GROUP.prefix}:*")
     }
 

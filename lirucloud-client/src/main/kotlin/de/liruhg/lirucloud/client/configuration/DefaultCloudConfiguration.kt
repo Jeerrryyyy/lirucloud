@@ -1,19 +1,20 @@
 package de.liruhg.lirucloud.client.configuration
 
-import de.liruhg.lirucloud.client.configuration.model.CloudConfigurationModel
-import de.liruhg.lirucloud.client.runtime.RuntimeVars
+import de.liruhg.lirucloud.client.configuration.model.CloudConfiguration
+import de.liruhg.lirucloud.client.store.Store
 import de.liruhg.lirucloud.library.configuration.Configuration
-import de.liruhg.lirucloud.library.configuration.model.CacheConnectionModel
-import de.liruhg.lirucloud.library.configuration.model.DatabaseConnectionModel
+import de.liruhg.lirucloud.library.configuration.model.CacheConnection
+import de.liruhg.lirucloud.library.configuration.model.DatabaseConnection
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.util.FileUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
+import kotlin.system.exitProcess
 
 class DefaultCloudConfiguration(
-    private val runtimeVars: RuntimeVars
+    private val store: Store
 ) : Configuration {
 
     private val logger: Logger = LoggerFactory.getLogger(DefaultCloudConfiguration::class.java)
@@ -24,17 +25,16 @@ class DefaultCloudConfiguration(
         if (!cloudConfigurationFile.exists()) {
             this.logger.info("Cloud configuration file does not exist. Creating default configuration file.")
 
-            val cloudConfigurationModel = CloudConfigurationModel(
+            val cloudConfiguration = CloudConfiguration(
                 masterAddress = "localhost",
                 masterPort = 8080,
-                webPort = 8081,
                 name = "Client",
                 delimiter = "-",
                 suffix = "1",
                 memory = 10240,
                 uuid = UUID.randomUUID().toString(),
                 responsibleGroups = emptySet(),
-                database = DatabaseConnectionModel(
+                database = DatabaseConnection(
                     connectionUrl = "mongodb://localhost:27017",
                     databaseName = "lirucloud",
                     bucketName = "templates",
@@ -42,7 +42,7 @@ class DefaultCloudConfiguration(
                         "filesCollection" to "filesCollection"
                     )
                 ),
-                cache = CacheConnectionModel(
+                cache = CacheConnection(
                     host = "localhost",
                     port = 6379,
                     user = "",
@@ -51,14 +51,15 @@ class DefaultCloudConfiguration(
                 )
             )
 
-            FileUtils.writeClassToJsonFile(cloudConfigurationFile, cloudConfigurationModel)
+            FileUtils.writeClassToJsonFile(cloudConfigurationFile, cloudConfiguration)
+            exitProcess(0)
         }
 
-        val cloudConfigurationModel = FileUtils.readClassFromJson(
+        val cloudConfiguration = FileUtils.readClassFromJson(
             cloudConfigurationFile,
-            CloudConfigurationModel::class.java
+            CloudConfiguration::class.java
         )
 
-        this.runtimeVars.cloudConfiguration = cloudConfigurationModel
+        this.store.cloudConfiguration = cloudConfiguration
     }
 }

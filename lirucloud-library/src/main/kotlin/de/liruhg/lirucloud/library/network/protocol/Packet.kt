@@ -1,8 +1,11 @@
 package de.liruhg.lirucloud.library.network.protocol
 
 import io.netty.channel.ChannelHandlerContext
+import java.util.*
 
-interface Packet {
+abstract class Packet(
+    var callbackId: UUID = UUID.randomUUID()
+) {
 
-    fun handle(channelHandlerContext: ChannelHandlerContext) {}
+    open fun handle(channelHandlerContext: ChannelHandlerContext) {}
 }

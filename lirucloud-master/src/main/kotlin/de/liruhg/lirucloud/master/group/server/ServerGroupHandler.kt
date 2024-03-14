@@ -17,7 +17,6 @@ import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.util.FileUtils
 import de.liruhg.lirucloud.library.util.HashUtils
 import de.liruhg.lirucloud.master.group.GroupHandler
-import de.liruhg.lirucloud.master.group.server.model.ServerGroupModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -27,11 +26,11 @@ class ServerGroupHandler(
     private val fileHandler: FileHandler,
     private val databaseConnectionFactory: DatabaseConnectionFactory,
     private val cacheConnectionFactory: CacheConnectionFactory
-) : GroupHandler<ServerGroupModel> {
+) : GroupHandler<ServerGroup> {
 
     private val logger: Logger = LoggerFactory.getLogger(ServerGroupHandler::class.java)
 
-    override fun createGroup(group: ServerGroupModel) {
+    override fun createGroup(group: ServerGroup) {
         this.databaseConnectionFactory.serverGroupsCollection.insertEntity(group)
 
         this.registerGroup(group)
@@ -50,7 +49,7 @@ class ServerGroupHandler(
 
         FileUtils.writeStringToFile(
             File(defaultTemplatePath.toFile(), "LICENSE.txt"),
-            "This server is provided by LiruCloud entirely written by JevzoTV. You are not allowed to redistribute this software or claim it as your own."
+            "This server is provided by LiruCloud entirely written by Jevzo (voidptr). You are not allowed to redistribute this software or claim it as your own."
         )
 
         FileUtils.copyAllFiles(
@@ -70,7 +69,7 @@ class ServerGroupHandler(
         this.logger.info("Successfully created group with Name: [${group.name}]")
     }
 
-    override fun deleteGroup(group: ServerGroupModel) {
+    override fun deleteGroup(group: ServerGroup) {
         val hashedName = HashUtils.hashStringMD5(group.name)
 
         this.fileHandler.deleteFile(hashedName)
@@ -85,7 +84,7 @@ class ServerGroupHandler(
     }
 
     override fun groupExists(name: String): Boolean {
-        return this.databaseConnectionFactory.serverGroupsCollection.getEntity<ServerGroupModel>(
+        return this.databaseConnectionFactory.serverGroupsCollection.getEntity<ServerGroup>(
             Filters.eq(
                 "name",
                 name
@@ -97,27 +96,27 @@ class ServerGroupHandler(
         return this.databaseConnectionFactory.serverGroupsCollection.countDocuments() == 0L
     }
 
-    override fun fetchGroups(): Set<ServerGroupModel> {
-        return this.databaseConnectionFactory.serverGroupsCollection.getAllEntities<ServerGroupModel>().toSet()
+    override fun fetchGroups(): Set<ServerGroup> {
+        return this.databaseConnectionFactory.serverGroupsCollection.getAllEntities<ServerGroup>().toSet()
     }
 
-    override fun fetchGroup(name: String): ServerGroupModel? {
+    override fun fetchGroup(name: String): ServerGroup? {
         return this.databaseConnectionFactory.serverGroupsCollection.getEntity(Filters.eq("name", name))
     }
 
-    override fun registerGroup(group: ServerGroupModel) {
+    override fun registerGroup(group: ServerGroup) {
         this.cacheConnectionFactory.jedisPooled.insertEntity(CachePrefix.SERVER_GROUP, group.name, group)
     }
 
-    override fun unregisterGroup(group: ServerGroupModel) {
+    override fun unregisterGroup(group: ServerGroup) {
         this.cacheConnectionFactory.jedisPooled.deleteEntity(CachePrefix.SERVER_GROUP, group.name)
     }
 
-    override fun getGroup(name: String): ServerGroupModel? {
+    override fun getGroup(name: String): ServerGroup? {
         return this.cacheConnectionFactory.jedisPooled.getEntity(CachePrefix.SERVER_GROUP, name)
     }
 
-    override fun getGroups(): List<ServerGroupModel> {
+    override fun getGroups(): List<ServerGroup> {
         return this.cacheConnectionFactory.jedisPooled.getAllEntities("${CachePrefix.SERVER_GROUP.prefix}:*")
     }
 

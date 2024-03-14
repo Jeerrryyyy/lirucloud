@@ -1,9 +1,9 @@
 package de.liruhg.lirucloud.master.configuration.proxy
 
 import de.liruhg.lirucloud.library.configuration.Configuration
-import de.liruhg.lirucloud.library.proxy.ProxyInformationModel
+import de.liruhg.lirucloud.library.proxy.ProxyInformation
+import de.liruhg.lirucloud.master.group.proxy.ProxyGroup
 import de.liruhg.lirucloud.master.group.proxy.ProxyGroupHandler
-import de.liruhg.lirucloud.master.group.proxy.model.ProxyGroupModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -19,13 +19,13 @@ class ProxyGroupLoader(
         if (shouldCreateGroup) {
             this.logger.warn("No proxy groups found. Continuing with creating default proxy group..")
 
-            val proxyGroupModel = ProxyGroupModel(
+            val proxyGroup = ProxyGroup(
                 name = "Proxy",
                 minServersOnline = 1,
                 maxMemory = 512,
                 minMemory = 128,
                 maxPlayers = 1000,
-                proxyInformation = ProxyInformationModel(
+                proxyInformation = ProxyInformation(
                     joinPower = 0,
                     maintenance = false,
                     maintenanceProtocolMessage = "§cProtocol message",
@@ -34,7 +34,7 @@ class ProxyGroupLoader(
                 )
             )
 
-            this.proxyGroupHandler.createGroup(proxyGroupModel)
+            this.proxyGroupHandler.createGroup(proxyGroup)
             return
         }
 

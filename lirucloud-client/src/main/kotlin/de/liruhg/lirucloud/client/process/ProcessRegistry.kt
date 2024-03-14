@@ -5,14 +5,13 @@ import de.liruhg.lirucloud.library.util.FileUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.exists
 
 class ProcessRegistry {
 
     private val logger: Logger = LoggerFactory.getLogger(ProcessRegistry::class.java)
 
-    private val processes: ConcurrentHashMap<String, InternalCloudProcess> = ConcurrentHashMap()
+    private val processes: MutableMap<String, InternalCloudProcess> = mutableMapOf()
 
     fun registerProcess(process: InternalCloudProcess) {
         if (this.processes.containsKey(process.uuid)) return

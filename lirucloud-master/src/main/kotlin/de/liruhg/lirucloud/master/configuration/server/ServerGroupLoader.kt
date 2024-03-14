@@ -2,9 +2,9 @@ package de.liruhg.lirucloud.master.configuration.server
 
 import de.liruhg.lirucloud.library.configuration.Configuration
 import de.liruhg.lirucloud.library.process.ProcessMode
-import de.liruhg.lirucloud.library.server.ServerInformationModel
+import de.liruhg.lirucloud.library.server.ServerInformation
+import de.liruhg.lirucloud.master.group.server.ServerGroup
 import de.liruhg.lirucloud.master.group.server.ServerGroupHandler
-import de.liruhg.lirucloud.master.group.server.model.ServerGroupModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -20,13 +20,13 @@ class ServerGroupLoader(
         if (shouldCreateGroup) {
             this.logger.warn("No server groups found. Continuing with creating default lobby group..")
 
-            val serverGroupModel = ServerGroupModel(
+            val serverGroup = ServerGroup(
                 name = "Lobby",
                 minServersOnline = 1,
                 maxMemory = 256,
                 minMemory = 64,
                 maxPlayers = 64,
-                serverInformation = ServerInformationModel(
+                serverInformation = ServerInformation(
                     joinPower = 0,
                     maintenance = false,
                 ),
@@ -37,7 +37,7 @@ class ServerGroupLoader(
                 templateModes = mutableSetOf()
             )
 
-            this.serverGroupHandler.createGroup(serverGroupModel)
+            this.serverGroupHandler.createGroup(serverGroup)
             return
         }
 

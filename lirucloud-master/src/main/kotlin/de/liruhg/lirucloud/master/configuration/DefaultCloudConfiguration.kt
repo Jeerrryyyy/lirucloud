@@ -1,19 +1,20 @@
 package de.liruhg.lirucloud.master.configuration
 
 import de.liruhg.lirucloud.library.configuration.Configuration
-import de.liruhg.lirucloud.library.configuration.model.CacheConnectionModel
-import de.liruhg.lirucloud.library.configuration.model.DatabaseConnectionModel
+import de.liruhg.lirucloud.library.configuration.model.CacheConnection
+import de.liruhg.lirucloud.library.configuration.model.DatabaseConnection
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.util.FileUtils
-import de.liruhg.lirucloud.master.configuration.model.CloudConfigurationModel
-import de.liruhg.lirucloud.master.configuration.model.ValidClientModel
-import de.liruhg.lirucloud.master.runtime.RuntimeVars
+import de.liruhg.lirucloud.master.configuration.model.CloudConfiguration
+import de.liruhg.lirucloud.master.configuration.model.ValidClient
+import de.liruhg.lirucloud.master.store.Store
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import kotlin.system.exitProcess
 
 class DefaultCloudConfiguration(
-    private val runtimeVars: RuntimeVars
+    private val store: Store
 ) : Configuration {
 
     private val logger: Logger = LoggerFactory.getLogger(DefaultCloudConfiguration::class.java)
@@ -24,21 +25,21 @@ class DefaultCloudConfiguration(
         if (!cloudConfigurationFile.exists()) {
             this.logger.info("Cloud configuration file does not exist. Creating default configuration file.")
 
-            val cloudConfigurationModel = CloudConfigurationModel(
-                masterServerPort = 8080,
-                masterWebPort = 8081,
-                database = DatabaseConnectionModel(
+            val cloudConfiguration = CloudConfiguration(
+                serverPort = 8080,
+                defaultProxyGroupName = "Proxy",
+                defaultLobbyGroupName = "Lobby",
+                database = DatabaseConnection(
                     connectionUrl = "mongodb://localhost:27017",
                     databaseName = "lirucloud",
                     bucketName = "templates",
                     collections = mutableMapOf(
                         "filesCollection" to "filesCollection",
-                        "webUserCollection" to "webUserCollection",
                         "proxyGroupsCollection" to "proxyGroupsCollection",
                         "serverGroupsCollection" to "serverGroupsCollection"
                     )
                 ),
-                cache = CacheConnectionModel(
+                cache = CacheConnection(
                     host = "localhost",
                     port = 6379,
                     user = "",
@@ -46,18 +47,19 @@ class DefaultCloudConfiguration(
                     database = 0
                 ),
                 validClients = setOf(
-                    ValidClientModel("Client-1", setOf("localhost", "127.0.0.1", "0:0:0:0:0:0:0:1"))
+                    ValidClient("Client-1", setOf("localhost", "127.0.0.1", "0:0:0:0:0:0:0:1"))
                 )
             )
 
-            FileUtils.writeClassToJsonFile(cloudConfigurationFile, cloudConfigurationModel)
+            FileUtils.writeClassToJsonFile(cloudConfigurationFile, cloudConfiguration)
+            exitProcess(0)
         }
 
-        val cloudConfigurationModel = FileUtils.readClassFromJson(
+        val cloudConfiguration = FileUtils.readClassFromJson(
             cloudConfigurationFile,
-            CloudConfigurationModel::class.java
+            CloudConfiguration::class.java
         )
 
-        this.runtimeVars.cloudConfiguration = cloudConfigurationModel
+        this.store.cloudConfiguration = cloudConfiguration
     }
 }

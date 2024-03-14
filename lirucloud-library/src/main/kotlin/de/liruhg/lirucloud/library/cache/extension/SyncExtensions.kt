@@ -7,10 +7,10 @@ import redis.clients.jedis.JedisPooled
 
 val gson: Gson = GsonBuilder().disableHtmlEscaping().create()
 
-fun <T> JedisPooled.insertEntity(prefix: CachePrefix, key: String, entity: T) =
+fun <T> JedisPooled.insertEntity(prefix: CachePrefix, key: String, entity: T): String =
     set("${prefix.prefix}:$key", gson.toJson(entity))
 
-fun <T> JedisPooled.insertEntity(prefix: CachePrefix, key: String, entity: T, ttl: Long) =
+fun <T> JedisPooled.insertEntity(prefix: CachePrefix, key: String, entity: T, ttl: Long): String =
     setex("${prefix.prefix}:$key", ttl, gson.toJson(entity))
 
 fun JedisPooled.deleteEntity(prefix: CachePrefix, key: String) = del("${prefix.prefix}:$key")

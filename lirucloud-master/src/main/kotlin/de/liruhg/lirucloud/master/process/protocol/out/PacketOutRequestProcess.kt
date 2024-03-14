@@ -5,4 +5,4 @@ import de.liruhg.lirucloud.library.process.CloudProcess
 
 data class PacketOutRequestProcess(
     private val cloudProcess: CloudProcess
-) : Packet
+) : Packet()

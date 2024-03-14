@@ -1,25 +1,17 @@
 package de.liruhg.lirucloud.client
 
-import de.liruhg.lirucloud.client.command.ExecuteCommand
-import de.liruhg.lirucloud.client.configuration.DefaultCloudConfiguration
-import de.liruhg.lirucloud.client.configuration.DefaultFolderCreator
-import de.liruhg.lirucloud.client.configuration.KeyReader
-import de.liruhg.lirucloud.client.configuration.proxy.ProxySoftwareDownloader
-import de.liruhg.lirucloud.client.configuration.server.ServerSoftwareDownloader
+import de.liruhg.lirucloud.client.configuration.*
 import de.liruhg.lirucloud.client.network.NetworkClient
 import de.liruhg.lirucloud.client.network.protocol.`in`.PacketInClientHandshakeResult
 import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestHandshake
-import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientRequestProcesses
-import de.liruhg.lirucloud.client.network.protocol.out.PacketOutClientUpdateLoadStatus
 import de.liruhg.lirucloud.client.process.ProcessRegistry
-import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInProcessUpdateStatus
 import de.liruhg.lirucloud.client.process.protocol.`in`.PacketInRequestProcess
-import de.liruhg.lirucloud.client.process.proxy.config.ProxyConfigurationGenerator
-import de.liruhg.lirucloud.client.process.proxy.handler.ProxyProcessRequestHandler
-import de.liruhg.lirucloud.client.process.server.config.ServerConfigGenerator
-import de.liruhg.lirucloud.client.process.server.handler.ServerProcessRequestHandler
-import de.liruhg.lirucloud.client.runtime.RuntimeVars
-import de.liruhg.lirucloud.client.task.UpdateLoadStatusTask
+import de.liruhg.lirucloud.client.process.protocol.out.PacketOutRequestProcessResult
+import de.liruhg.lirucloud.client.process.proxy.ProxyConfigurationGenerator
+import de.liruhg.lirucloud.client.process.proxy.ProxyProcessRequestHandler
+import de.liruhg.lirucloud.client.process.server.ServerConfigGenerator
+import de.liruhg.lirucloud.client.process.server.ServerProcessRequestHandler
+import de.liruhg.lirucloud.client.store.Store
 import de.liruhg.lirucloud.library.command.CommandManager
 import de.liruhg.lirucloud.library.command.commands.CloudExitCommand
 import de.liruhg.lirucloud.library.command.commands.CloudHelpCommand
@@ -37,8 +29,6 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 class LiruCloudClient {
@@ -58,16 +48,16 @@ class LiruCloudClient {
 
         KODEIN.direct.instance<ConfigurationExecutor>().executeConfigurations(
             DefaultFolderCreator(),
-            DefaultCloudConfiguration(KODEIN.direct.instance<RuntimeVars>())
+            DefaultCloudConfiguration(KODEIN.direct.instance<Store>())
         )
 
-        val runtimeVars = KODEIN.direct.instance<RuntimeVars>()
+        val store = KODEIN.direct.instance<Store>()
 
-        KODEIN.direct.instance<DatabaseConnectionFactory>().connectDatabase(runtimeVars.cloudConfiguration.database)
+        KODEIN.direct.instance<DatabaseConnectionFactory>().connectDatabase(store.cloudConfiguration.database)
         KODEIN.direct.instance<ConfigurationExecutor>().executeConfigurations()
         KODEIN.direct.instance<CommandManager>().start()
         KODEIN.direct.instance<NetworkClient>()
-            .startClient(runtimeVars.cloudConfiguration.masterAddress, runtimeVars.cloudConfiguration.masterPort)
+            .startClient(store.cloudConfiguration.masterAddress, store.cloudConfiguration.masterPort)
 
         this.startTasks()
     }
@@ -88,7 +78,7 @@ class LiruCloudClient {
         KODEIN = DI {
             bindSingleton { ThreadPool() }
 
-            bindSingleton { RuntimeVars() }
+            bindSingleton { Store() }
             bindSingleton { NettyHelper() }
             bindSingleton { NetworkUtil() }
 
@@ -99,7 +89,7 @@ class LiruCloudClient {
             bindSingleton {
                 val configurationExecutor = ConfigurationExecutor()
 
-                configurationExecutor.registerConfiguration(KeyReader(instance()))
+                configurationExecutor.registerConfiguration(CloudKeysCreator(instance()))
                 configurationExecutor.registerConfiguration(ProxySoftwareDownloader(instance()))
                 configurationExecutor.registerConfiguration(ServerSoftwareDownloader(instance()))
 
@@ -110,7 +100,6 @@ class LiruCloudClient {
                 val commandManager = CommandManager(instance())
 
                 commandManager.registerCommand(CloudExitCommand())
-                commandManager.registerCommand(ExecuteCommand(instance()))
                 commandManager.registerCommand(CloudHelpCommand(commandManager))
 
                 commandManager
@@ -132,12 +121,8 @@ class LiruCloudClient {
                     PacketOutClientRequestHandshake::class.java
                 )
                 packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_REQUEST_PROCESSES,
-                    PacketOutClientRequestProcesses::class.java
-                )
-                packetRegistry.registerOutgoingPacket(
-                    PacketId.PACKET_UPDATE_LOAD_STATUS,
-                    PacketOutClientUpdateLoadStatus::class.java
+                    PacketId.PACKET_REQUEST_PROCESS_RESULT,
+                    PacketOutRequestProcessResult::class.java
                 )
 
                 packetRegistry.registerIncomingPacket(
@@ -148,15 +133,11 @@ class LiruCloudClient {
                     PacketId.PACKET_REQUEST_PROCESS,
                     PacketInRequestProcess::class.java
                 )
-                packetRegistry.registerIncomingPacket(
-                    PacketId.PACKET_PROCESS_UPDATE_STATUS,
-                    PacketInProcessUpdateStatus::class.java
-                )
 
                 packetRegistry
             }
 
-            bindSingleton { NetworkClient(instance(), instance(), instance()) }
+            bindSingleton { NetworkClient(instance(), instance(), instance(), instance()) }
         }
     }
 
@@ -167,19 +148,14 @@ class LiruCloudClient {
 
         this.logger.warn("Please consider not to use the \"root\" user for security reasons!")
         this.logger.warn("If you want to use it anyway, at your own risk, add \"--enable-root\" to the start arguments.")
-        exitProcess(1)
+        exitProcess(0)
     }
 
     private fun checkForDebug(args: Array<String>) {
-        KODEIN.direct.instance<RuntimeVars>().debug = args.contains("--debug")
+        KODEIN.direct.instance<Store>().debug = args.contains("--debug")
     }
 
     private fun startTasks() {
-        val timer = Timer("lirucloud-timer")
-        timer.scheduleAtFixedRate(
-            UpdateLoadStatusTask(),
-            TimeUnit.SECONDS.toMillis(5),
-            TimeUnit.SECONDS.toMillis(5)
-        )
+
     }
 }

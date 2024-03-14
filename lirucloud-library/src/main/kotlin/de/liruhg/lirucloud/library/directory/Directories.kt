@@ -4,8 +4,8 @@ class Directories {
 
     companion object {
         private const val ROOT_PREFIX = "app"
-        const val MASTER_ROOT = "$ROOT_PREFIX/master"
 
+        const val MASTER_ROOT = "$ROOT_PREFIX/master"
         const val MASTER_CONFIGURATION = "$MASTER_ROOT/configuration"
         const val MASTER_KEYS = "$MASTER_ROOT/keys"
         const val MASTER_SOFTWARE = "$MASTER_ROOT/software"
@@ -32,10 +32,10 @@ class Directories {
         const val CLIENT_RUNNING_PROCESSES_PROXY = "$CLIENT_RUNNING_PROCESSES/proxy"
         const val CLIENT_RUNNING_PROCESSES_SERVER = "$CLIENT_RUNNING_PROCESSES/server"
 
-        const val PROXY_PLUGINS = "plugins/"
-        const val PROXY_PLUGINS_API = "plugins/LiruCloudProxyApi/"
+        const val PROXY_PLUGINS = "plugins"
+        const val PROXY_PLUGINS_API = "$PROXY_PLUGINS/LiruCloudProxyApi/"
 
-        const val SERVER_PLUGINS = "plugins/"
-        const val SERVER_PLUGINS_API = "plugins/LiruCloudServerApi/"
+        const val SERVER_PLUGINS = "plugins"
+        const val SERVER_PLUGINS_API = "$SERVER_PLUGINS/LiruCloudServerApi/"
     }
 }

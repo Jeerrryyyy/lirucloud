@@ -3,14 +3,14 @@ package de.liruhg.lirucloud.master.configuration
 import de.liruhg.lirucloud.library.configuration.Configuration
 import de.liruhg.lirucloud.library.directory.Directories
 import de.liruhg.lirucloud.library.util.FileUtils
-import de.liruhg.lirucloud.master.runtime.RuntimeVars
+import de.liruhg.lirucloud.master.store.Store
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
 
 class CloudKeysCreator(
-    private val runtimeVars: RuntimeVars
+    private val store: Store
 ) : Configuration {
 
     private val logger: Logger = LoggerFactory.getLogger(CloudKeysCreator::class.java)
@@ -26,7 +26,7 @@ class CloudKeysCreator(
         }
 
         val clientKey = FileUtils.readStringFromFile(clientKeyFile)
-        this.runtimeVars.clientKey = clientKey
+        this.store.clientKey = clientKey
     }
 
     private fun generateKey(): String {

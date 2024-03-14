@@ -6,7 +6,8 @@ import java.net.SocketTimeoutException
 class DownloadUtils {
 
     companion object {
-        private const val USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11"
+        private const val USER_AGENT =
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11"
 
         @Throws(SocketTimeoutException::class)
         fun downloadFile(url: String, to: String, connectTimeout: Int, readTimeout: Int, useCache: Boolean) {

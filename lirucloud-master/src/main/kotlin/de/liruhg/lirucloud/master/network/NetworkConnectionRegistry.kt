@@ -2,11 +2,10 @@ package de.liruhg.lirucloud.master.network
 
 import io.netty.channel.Channel
 import io.netty.channel.ChannelId
-import java.util.concurrent.ConcurrentHashMap
 
 class NetworkConnectionRegistry {
 
-    private val danglingConnections: ConcurrentHashMap<ChannelId, Pair<Long, Channel>> = ConcurrentHashMap()
+    private val danglingConnections: MutableMap<ChannelId, Pair<Long, Channel>> = mutableMapOf()
 
     fun registerDanglingConnection(chanelId: ChannelId, channel: Channel): Boolean {
         if (this.danglingConnections.containsKey(chanelId)) return false
@@ -26,7 +25,7 @@ class NetworkConnectionRegistry {
         return this.danglingConnections[chanelId]
     }
 
-    fun getDanglingConnections(): ConcurrentHashMap<ChannelId, Pair<Long, Channel>> {
+    fun getDanglingConnections(): MutableMap<ChannelId, Pair<Long, Channel>> {
         return this.danglingConnections
     }
 }

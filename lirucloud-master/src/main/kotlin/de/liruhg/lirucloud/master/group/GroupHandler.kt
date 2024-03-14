@@ -1,6 +1,6 @@
 package de.liruhg.lirucloud.master.group
 
-interface GroupHandler<T : AbstractGroup> {
+interface GroupHandler<T : Group> {
 
     fun registerGroup(group: T)
     fun unregisterGroup(group: T)

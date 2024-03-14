@@ -25,7 +25,11 @@ class PortUtil(
     fun getNextFreePort(startPort: Int): Int {
         var port = startPort
 
-        while (!this.isPortFree(port) || this.cacheConnectionFactory.jedisPooled.existsEntity(CachePrefix.PORT, port.toString())) {
+        while (!this.isPortFree(port) || this.cacheConnectionFactory.jedisPooled.existsEntity(
+                CachePrefix.PORT,
+                port.toString()
+            )
+        ) {
             port++
         }
 
